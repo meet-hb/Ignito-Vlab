@@ -1,11 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ignito-primary: #dc2626; /* Professional Red */
-  --color-ignito-accent: #ef4444; /* Light Red */
-  --color-ignito-bg: #f8fafc; /* Slate 50 background */
-  --color-ignito-text: #0f172a; /* Slate 900 text */
-  --color-ignito-sidebar: #ffffff; /* White sidebar */
+  --color-ignito-primary: #dc2626;
+  /* Professional Red */
+  --color-ignito-accent: #ef4444;
+  /* Light Red */
+  --color-ignito-bg: #f8fafc;
+  /* Slate 50 background */
+  --color-ignito-text: #0f172a;
+  /* Slate 900 text */
+  --color-ignito-sidebar: #ffffff;
+  /* White sidebar */
   --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   --color-contrasting-bg: #ffffff;
   --color-panel-bg: rgba(255, 255, 255, 0.85);
@@ -13,7 +18,10 @@
 }
 
 @layer base {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
   }
 
@@ -39,7 +47,12 @@
   }
 
   /* Typography enhancements */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-black tracking-tight;
   }
 }
@@ -89,7 +102,10 @@
 .lab-card::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: radial-gradient(circle at center, rgba(220, 38, 38, 0.08) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -112,9 +128,17 @@
 }
 
 @keyframes gradientShift {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
 }
 
 .glass-panel {
@@ -122,7 +146,7 @@
   border: 1px solid var(--color-border-soft);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255,255,255,1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 1);
   border-radius: 1.5rem;
 }
 
@@ -162,15 +186,18 @@
   width: 8px;
   height: 8px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.08);
   border-radius: 20px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(220, 38, 38, 0.2);
   border: 2px solid transparent;
@@ -198,4 +225,3 @@
     display: none !important;
   }
 }
-
