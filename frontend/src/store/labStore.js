@@ -1,11 +1,9 @@
 import { create } from 'zustand';
-import { LABS } from '../constants/labs';
-import { SUB_LABS_DATA } from '../constants/labs';
 import { fetchLabs, fetchSubLabs } from '../services/labService';
 
 export const useLabStore = create((set) => ({
-  labs: LABS,
-  subLabs: SUB_LABS_DATA,
+  labs: [],
+  subLabs: {},
   isLoading: false,
   error: null,
   addLab: (lab) => set((state) => ({ labs: [...state.labs, lab] })),
