@@ -12,7 +12,6 @@ const MOCK_USER = {
 // POST /api/auth/login
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
-
   if (email === 'admin@ignito.com' && password === 'admin123') {
     res.json({
       success: true,
