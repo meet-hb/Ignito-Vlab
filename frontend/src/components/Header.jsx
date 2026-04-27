@@ -18,13 +18,14 @@ import {
   MdSupportAgent
 } from 'react-icons/md';
 import { useAuthStore } from '../store/authStore';
-import { LABS, SUB_LABS_DATA } from '../constants/labs';
+import { useLabStore } from '../store/labStore';
 
 const Header = ({ onMenuClick, title, onBack }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState([]);
   const logout = useAuthStore(state => state.logout);
+  const { labs, subLabs } = useLabStore();
   const open = Boolean(anchorEl);
 
   // Combine all labs and sub-labs into one searchable list
@@ -32,12 +33,12 @@ const Header = ({ onMenuClick, title, onBack }) => {
     const data = [];
     
     // Add Main Labs
-    LABS.forEach(lab => {
+    labs.forEach(lab => {
       data.push({ id: lab.id, type: 'Category', name: lab.title, path: `/admin/labs` });
     });
 
     // Add Sub Labs
-    Object.values(SUB_LABS_DATA).forEach(subList => {
+    Object.values(subLabs).forEach(subList => {
       subList.forEach(sub => {
         data.push({ id: sub.id, type: 'Lab', name: sub.title, path: `/admin/labs/view/${sub.id}` });
       });
@@ -48,7 +49,7 @@ const Header = ({ onMenuClick, title, onBack }) => {
     data.push({ id: 'p1', type: 'Policy', name: 'Global Admin Policy', path: '/admin/policies' });
     
     return data;
-  }, []);
+  }, [labs, subLabs]);
 
   React.useEffect(() => {
     if (searchQuery.length > 1) {
