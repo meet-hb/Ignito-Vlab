@@ -301,8 +301,27 @@ const CloudEditor = ({ onMenuClick }) => {
             </Box>
 
             <Box className="flex items-center gap-4 shrink-0">
-              <IconButton onClick={handleFormat} className="text-slate-400 hover:text-white p-1.5"><MdFormatAlignLeft size={18} /></IconButton>
-              <IconButton onClick={handleSave} className="text-slate-400 hover:text-white p-1.5"><MdSave size={18} /></IconButton>
+              <IconButton onClick={handleFormat} className="text-white hover:text-red-400 p-1.5"><MdFormatAlignLeft size={18} /></IconButton>
+              <IconButton 
+                onClick={() => {
+                  handleSave();
+                  // Local download logic
+                  if (activeFile) {
+                    const blob = new Blob([activeFile.content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = activeFile.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                  }
+                }} 
+                className="text-white hover:text-emerald-400 p-1.5"
+              >
+                <MdSave size={18} />
+              </IconButton>
               <Button
                 onClick={handleRun}
                 variant="contained"
