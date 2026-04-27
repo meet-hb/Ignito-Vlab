@@ -1,0 +1,31 @@
+import { create } from 'zustand';
+import { LABS } from '../constants/labs';
+import { SUB_LABS_DATA } from '../constants/labs';
+import { fetchLabs, fetchSubLabs } from '../services/labService';
+
+export const useLabStore = create((set) => ({
+  labs: LABS,
+  subLabs: SUB_LABS_DATA,
+  isLoading: false,
+  error: null,
+  addLab: (lab) => set((state) => ({ labs: [...state.labs, lab] })),
+  updateLab: (updatedLab) => set((state) => ({
+    labs: state.labs.map((l) => l.id === updatedLab.id ? updatedLab : l)
+  })),
+  deleteLab: (id) => set((state) => ({
+    labs: state.labs.filter((l) => l.id !== id)
+  })),
+  setSubLabs: (labName, labs) => set((state) => ({
+    subLabs: { ...state.subLabs, [labName]: labs }
+  })),
+  loadLabs: async () => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const [labs, subLabs] = await Promise.all([fetchLabs(), fetchSubLabs()]);
+      set({ labs, subLabs, isLoading: false, error: null });
+    } catch (error) {
+      set({ isLoading: false, error: error.message || 'Unable to load labs' });
+    }
+  },
+}));
