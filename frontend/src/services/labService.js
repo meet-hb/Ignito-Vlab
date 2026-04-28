@@ -23,6 +23,10 @@ export async function fetchLabSessionStatus(sessionId) {
   return apiRequest(`/lab-sessions/${sessionId}`);
 }
 
+export async function fetchUserActiveSession(userId) {
+  return apiRequest(`/lab-sessions/user/${userId}`);
+}
+
 export async function stopLabSession(sessionId) {
   return apiRequest(`/lab-sessions/${sessionId}/stop`, {
     method: 'POST',

@@ -17,6 +17,7 @@ import {
   MdChevronRight,
   MdContentCopy,
   MdFolderOpen,
+  MdCode,
   MdMonitor,
   MdOpenInNew,
   MdOutlineTerminal,
@@ -24,11 +25,13 @@ import {
 } from 'react-icons/md';
 import { motion } from 'motion/react';
 import Header from '../components/Header';
-import { fetchLabDetails, fetchLabSessionStatus, startLabSession, stopLabSession } from '../services/labService';
+import { fetchLabDetails, fetchLabSessionStatus, fetchUserActiveSession, startLabSession, stopLabSession } from '../services/labService';
+import { useAuthStore } from '../store/authStore';
 
 const ViewLab = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const user = useAuthStore(state => state.user);
   const [activeStep, setActiveStep] = useState(1);
   const [labDetails, setLabDetails] = useState(null);
   const [session, setSession] = useState(null);
@@ -46,6 +49,14 @@ const ViewLab = ({ onMenuClick }) => {
         if (mounted) {
           setLabDetails(response.lab);
         }
+
+        // Check if user already has an active session for this lab
+        if (user?.email) {
+          const sessionResponse = await fetchUserActiveSession(user.email);
+          if (mounted && sessionResponse.success && sessionResponse.session) {
+            setSession(sessionResponse.session);
+          }
+        }
       } catch (loadError) {
         if (mounted) {
           setError(loadError.message || 'Unable to load lab details');
@@ -59,6 +70,25 @@ const ViewLab = ({ onMenuClick }) => {
       mounted = false;
     };
   }, [id]);
+
+  // Polling for session status
+  useEffect(() => {
+    if (!session || session.status !== 'starting') return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetchLabSessionStatus(session.sessionId);
+        if (response.status === 'running' || response.status === 'failed') {
+          setSession(response);
+          clearInterval(pollInterval);
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [session]);
 
   useEffect(() => {
     if (!session?.expiresAt || session.status !== 'running') return;
@@ -85,7 +115,7 @@ const ViewLab = ({ onMenuClick }) => {
       setError('');
       const startResponse = await startLabSession({
         labId: id,
-        userId: 'current-user-id', // TODO: Replace with actual auth user ID
+        userId: user?.email,
       });
 
       const statusResponse = await fetchLabSessionStatus(startResponse.sessionId);
@@ -216,89 +246,34 @@ const ViewLab = ({ onMenuClick }) => {
               </Grid>
             </Grid>
 
-            {isLabStarted && credentials && (
+            {session?.status === 'running' && (
               <Box className="mt-8 md:mt-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/50 relative">
                 <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_#ef4444]" />
-                    <Typography className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Access Credentials Dashboard</Typography>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
+                    <Typography className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Environment Access Tools</Typography>
                   </div>
                 </div>
 
                 <div className="p-4 sm:p-6 md:p-8 bg-slate-50/50">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-8 space-y-4">
-                      {[
-                        { label: 'IAM USERNAME', value: credentials.username, key: 'username' },
-                        { label: 'ACCESS PASSWORD', value: credentials.password, key: 'password' },
-                        { label: 'ACCOUNT ID', value: credentials.accountId, key: 'accountId' },
-                        { label: 'ACCESS KEY ID', value: credentials.accessKey, key: 'accessKey' },
-                        { label: 'SECRET ACCESS KEY', value: credentials.secretAccessKey, key: 'secretKey' },
-                      ].map((cred, i) => (
-                        <motion.div
-                          key={cred.key}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.1 }}
-                          className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 p-4 rounded-2xl bg-white border border-slate-200 hover:border-red-500/30 hover:shadow-md transition-all group relative overflow-hidden"
-                        >
-                          <div className="w-full md:w-40">
-                            <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{cred.label}</Typography>
-                          </div>
-                          <div className="flex-1 flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3 sm:px-4 py-2.5 border border-slate-100 min-w-0">
-                            <Typography className="text-xs font-mono font-bold text-slate-700 break-all">{cred.value}</Typography>
-                            <Tooltip title={copiedKey === cred.key ? 'Identity Copied' : 'Copy Sequence'}>
-                              <button
-                                onClick={() => handleCopy(cred.value, cred.key)}
-                                className={`p-1.5 rounded-lg transition-all ${copiedKey === cred.key ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
-                              >
-                                <MdContentCopy size={16} />
-                              </button>
-                            </Tooltip>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Button
+                      variant="contained"
+                      onClick={() => navigate(`/admin/compute/ide?sessionId=${session.sessionId}`)}
+                      startIcon={<MdCode size={22} />}
+                      className="!bg-slate-900 !text-white hover:!bg-black font-black rounded-2xl py-6 shadow-xl transition-all hover:scale-[1.02] active:scale-95 text-sm tracking-widest uppercase"
+                    >
+                      Open Cloud IDE
+                    </Button>
 
-                    <div className="lg:col-span-4 flex flex-col justify-between">
-                      <div className="bg-red-600 rounded-[28px] p-5 sm:p-6 md:p-8 text-white relative overflow-hidden h-full flex flex-col justify-center shadow-[0_20px_50px_rgba(220,38,38,0.3)]">
-                        <div className="relative z-10">
-                          <Typography className="text-xs font-black uppercase tracking-[0.2em] opacity-80 mb-4">Direct Cloud Portal</Typography>
-                          <Typography variant="h4" className="font-black tracking-tight mb-6 md:mb-8 leading-tight text-2xl md:text-4xl">
-                            Execute Virtual <span className="text-red-100/60">Instance Console</span>
-                          </Typography>
-                          <Box className="space-y-3">
-                            <Button
-                              variant="contained"
-                              fullWidth
-                              onClick={() => window.open(remoteDesktopUrl, '_blank', 'noopener,noreferrer')}
-                              endIcon={<MdMonitor size={22} />}
-                              className="!bg-slate-900 !text-white hover:!bg-black font-black rounded-2xl py-5 shadow-2xl transition-all hover:scale-[1.02] active:scale-95 text-sm tracking-widest uppercase"
-                            >
-                              OPEN REMOTE DESKTOP
-                            </Button>
-                            <Box className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <Button
-                                variant="contained"
-                                onClick={() => navigate(toolLinks?.ide?.url || '/admin/compute/ide')}
-                                endIcon={<MdOpenInNew size={18} />}
-                                className="!bg-white !text-red-600 hover:!bg-red-50 font-black rounded-2xl py-4 shadow-xl transition-all hover:scale-[1.02] active:scale-95 text-[10px] tracking-widest uppercase"
-                              >
-                                IDE
-                              </Button>
-                              <Button
-                                variant="contained"
-                                onClick={() => navigate(toolLinks?.terminal?.url || '/admin/compute/terminals')}
-                                endIcon={<MdOutlineTerminal size={18} />}
-                                className="!bg-white !text-slate-600 hover:!bg-slate-50 font-black rounded-2xl py-4 shadow-xl transition-all hover:scale-[1.02] active:scale-95 text-[10px] tracking-widest uppercase"
-                              >
-                                CONSOLE
-                              </Button>
-                            </Box>
-                          </Box>
-                        </div>
-                      </div>
-                    </div>
+                    <Button
+                      variant="contained"
+                      onClick={() => navigate(`/admin/compute/terminals?sessionId=${session.sessionId}`)}
+                      startIcon={<MdOutlineTerminal size={22} />}
+                      className="!bg-white !text-slate-900 hover:!bg-slate-50 border border-slate-200 font-black rounded-2xl py-6 shadow-xl transition-all hover:scale-[1.02] active:scale-95 text-sm tracking-widest uppercase"
+                    >
+                      Open Terminal
+                    </Button>
                   </div>
                 </div>
               </Box>

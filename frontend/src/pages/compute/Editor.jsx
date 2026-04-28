@@ -73,11 +73,21 @@ const CloudEditor = ({ onMenuClick }) => {
   const [terminalHistory, setTerminalHistory] = useState(['Welcome to Ignito Cloud IDE Terminal', 'Type code and press Run to see output...', '']);
   const [webPreviewCode, setWebPreviewCode] = useState('');
   const fileInputRef = useRef(null);
-  const [sessionId] = useState(() => `sess_${Math.random().toString(36).substr(2, 9)}`);
+  const [sessionId] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('sessionId') || '';
+  });
+
+  useEffect(() => {
+    if (!sessionId) {
+      setError('Active session required. Please start a lab first.');
+    }
+  }, [sessionId]);
 
   useEffect(() => {
     let isMounted = true;
     const loadFiles = async () => {
+      if (!sessionId) return;
       try {
         const response = await fetchFiles();
         if (isMounted && response.success) {
@@ -92,7 +102,7 @@ const CloudEditor = ({ onMenuClick }) => {
     };
     loadFiles();
     return () => { isMounted = false; };
-  }, []);
+  }, [sessionId]);
 
   const activeFile = files[activeFileIndex];
 
@@ -106,7 +116,7 @@ const CloudEditor = ({ onMenuClick }) => {
   };
 
   const handleSave = async () => {
-    if (!activeFile) return;
+    if (!activeFile || !sessionId) return;
     setIsSaving(true);
     setError('');
     try {
@@ -122,33 +132,27 @@ const CloudEditor = ({ onMenuClick }) => {
   };
 
   const handleRun = async () => {
-    if (!activeFile) return;
+    if (!activeFile || !sessionId) return;
     setIsRunning(true);
     setError('');
+    setTerminalHistory(['> Executing ' + activeFile.name + '...', '']);
     
-    // Generate Web Preview
-    let codeToRender = '';
-    const content = activeFile.content;
-    const ext = activeFile.name.split('.').pop().toLowerCase();
-
-    if (ext === 'html') {
-      codeToRender = content;
-    } else if (ext === 'css') {
-      codeToRender = `<html><head><style>${content}</style></head><body><h1>CSS Preview</h1><p>This is how your CSS looks.</p></body></html>`;
-    } else if (ext === 'js' || ext === 'jsx') {
-      codeToRender = `<html><body><div id="root"></div><script>${content}<\/script></body></html>`;
-    } else {
-      codeToRender = `<html><body style="font-family: sans-serif; color: #333;"><h1>Output:</h1><pre>${content}</pre></body></html>`;
-    }
-    
-    setWebPreviewCode(codeToRender);
-
     try {
-      await runFile({
+      const response = await runFile({
         path: activeFile.path,
         language: activeFile.language,
         sessionId: sessionId,
       });
+
+      if (response.success && response.output) {
+        setTerminalHistory(prev => [...prev, response.output, '', '> Execution finished.']);
+        
+        // Also update web preview if it's HTML/JS
+        const ext = activeFile.name.split('.').pop().toLowerCase();
+        if (['html', 'htm', 'js', 'jsx'].includes(ext)) {
+          setWebPreviewCode(activeFile.content);
+        }
+      }
     } catch (runError) {
       setError(runError.message || 'Unable to run file');
       setTerminalHistory(prev => [...prev, `Error: ${runError.message}`, '']);
