@@ -60,7 +60,7 @@ const AllUsers = ({ onMenuClick }) => {
   const handleModalClose = () => setIsModalOpen(false);
 
   return (
-    <Box className="flex-1 flex flex-col min-h-0 app-shell">
+    <Box className="flex-1 flex flex-col min-h-0 app-shell h-full overflow-hidden">
       <Header
         onMenuClick={onMenuClick}
         title="Identity & Access"

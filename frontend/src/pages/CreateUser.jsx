@@ -17,7 +17,7 @@ import { motion } from 'motion/react';
 const CreateUser = ({ onMenuClick }) => {
   const [role, setRole] = React.useState('');
   return (
-    <Box className="flex-1 flex flex-col min-h-0 bg-slate-50 app-shell">
+    <Box className="flex-1 flex flex-col min-h-0 bg-slate-50 app-shell h-full overflow-hidden">
       <Header
         onMenuClick={onMenuClick}
         title="Create Entity"

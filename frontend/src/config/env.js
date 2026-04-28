@@ -1,6 +1,11 @@
 const trimTrailingSlash = (value) => value.replace(/\/+$/, '');
 
-const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+let rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+
+// If we are accessing via IP (not localhost), update the API URL to use that same IP
+if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && rawApiBaseUrl.includes('localhost')) {
+  rawApiBaseUrl = rawApiBaseUrl.replace('localhost', window.location.hostname);
+}
 
 export const APP_ENV = {
   apiBaseUrl: rawApiBaseUrl ? trimTrailingSlash(rawApiBaseUrl) : '',
