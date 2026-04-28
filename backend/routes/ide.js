@@ -10,6 +10,46 @@ const getSession = (req) => {
   const sessionId = req.headers['x-session-id'] || req.query.sessionId;
   return SESSIONS[sessionId];
 };
+const FILES = [];
+
+// GET /api/files
+router.get('/', (req, res) => {
+  res.json({
+    success: true,
+    files: FILES.map(({ content, language, ...file }) => file)
+  });
+});
+
+// GET /api/files/content
+router.get('/content', (req, res) => {
+  const file = FILES.find(f => f.path === req.query.path);
+  if (file) {
+    res.json({ success: true, path: file.path, content: file.content, language: file.language });
+  } else {
+    res.status(404).json({ success: false, message: "File not found" });
+  }
+});
+
+// POST /api/save
+router.post('/save', (req, res) => {
+  const { path, content, name, language } = req.body;
+  const fileIndex = FILES.findIndex(f => f.path === path);
+  
+  if (fileIndex !== -1) {
+    FILES[fileIndex].content = content;
+    res.json({ success: true, message: "File saved successfully" });
+  } else {
+    // Create new file
+    FILES.push({
+      name: name || path.split('/').pop(),
+      path: path,
+      type: 'file',
+      content: content || '',
+      language: language || 'python'
+    });
+    res.json({ success: true, message: "File created and saved successfully" });
+  }
+});
 
 // POST /api/run
 router.post('/run', async (req, res) => {

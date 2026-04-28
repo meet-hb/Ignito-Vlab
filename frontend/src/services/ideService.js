@@ -40,7 +40,8 @@ export async function runFile(payload) {
 
 export function connectTerminalStream({ sessionId, runId, onMessage }) {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = 'localhost:8080'; 
+  // Use current window host (with port 8080) for websocket
+  const host = `${window.location.hostname}:8080`; 
   const socket = new WebSocket(`${protocol}//${host}/ws/terminal?sessionId=${encodeURIComponent(sessionId)}&runId=${encodeURIComponent(runId || '')}`);
 
   socket.onmessage = (event) => {

@@ -39,7 +39,7 @@ export default function Dashboard({ onMenuClick }) {
   ]), [labs, subLabs]);
 
   return (
-    <Box className="flex-1 flex flex-col min-w-0 bg-slate-50 app-shell">
+    <Box className="flex-1 flex flex-col min-w-0 bg-slate-50 app-shell h-full overflow-hidden">
       <Header onMenuClick={onMenuClick} title={selectedLab ? getDetailTitle() : 'Infrastructure Dashboard'} onBack={selectedLab ? () => setSelectedLab(null) : undefined} />
 
       <Box component="main" className="flex-1 p-4 sm:p-6 lg:p-10 overflow-auto">
