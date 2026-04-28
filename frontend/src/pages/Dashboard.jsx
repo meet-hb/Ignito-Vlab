@@ -78,56 +78,27 @@ export default function Dashboard({ onMenuClick }) {
             </Box>
           </motion.div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ delay: 0.15, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-          >
-            {selectedLab ? (
-              <div className="space-y-6">
-                <Box className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2">
-                  <div>
-                    <Breadcrumbs separator={<span className="text-slate-300"><MdChevronRight size={18} /></span>} className="text-sm font-semibold text-slate-400">
-                      <Link underline="hover" color="inherit" onClick={() => setSelectedLab(null)} className="cursor-pointer hover:text-red-500 transition-colors">Infrastructure</Link>
-                      <Typography className="text-red-600 font-bold">{getDetailTitle()}</Typography>
-                    </Breadcrumbs>
-                    <Typography variant="h3" className="text-3xl md:text-4xl font-black text-slate-900 mt-2 uppercase tracking-tight glow-title">{getDetailTitle()} Labs</Typography>
-                  </div>
-                  <Button 
-                    onClick={() => setSelectedLab(null)}
-                    variant="outlined"
-                    className="text-slate-500 font-bold border-slate-200 rounded-xl hover:text-red-600 hover:border-red-200 normal-case px-6"
+            <div className="space-y-8">
+              <Box className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
+                <div>
+                  <motion.div
+                    initial={{ clipPath: 'inset(0 100% 0 0)' }}
+                    animate={{ clipPath: 'inset(0 0% 0 0)' }}
+                    transition={{ duration: 1, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
                   >
-                    Return to Hub
-                  </Button>
-                </Box>
-                <SubLabGrid labs={getSubLabsForSelected()} />
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <Box className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
-                  <div>
-                    <motion.div
-                      initial={{ clipPath: 'inset(0 100% 0 0)' }}
-                      animate={{ clipPath: 'inset(0 0% 0 0)' }}
-                      transition={{ duration: 1, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                    >
-                      <Typography variant="h2" className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none">
-                        Welcome, <span className="text-red-600">Meet</span>
-                      </Typography>
-                    </motion.div>
-                    <Typography className="text-xs text-slate-400 uppercase tracking-[0.4em] font-black mt-4 ml-1">Centralized Infrastructure Hub</Typography>
-                  </div>
-                  <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:flex pb-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    System Status: Optimal
-                  </div>
-                </Box>
-                <LabGrid onLabClick={handleLabClick} labs={labs} />
-              </div>
-            )}
-          </motion.div>
-
+                    <Typography variant="h2" className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none">
+                      Welcome, <span className="text-red-600">Meet</span>
+                    </Typography>
+                  </motion.div>
+                  <Typography className="text-xs text-slate-400 uppercase tracking-[0.4em] font-black mt-4 ml-1">Centralized Infrastructure Hub</Typography>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:flex pb-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                  System Status: Optimal
+                </div>
+              </Box>
+              <LabGrid onLabClick={() => {}} labs={labs} />
+            </div>
         </Box>
       </Box>
 
