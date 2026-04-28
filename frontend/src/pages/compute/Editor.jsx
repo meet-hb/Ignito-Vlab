@@ -131,7 +131,11 @@ const CloudEditor = ({ onMenuClick }) => {
   };
 
   const handleRun = async () => {
-    if (!activeFile || !sessionId) return;
+    if (!activeFile) return;
+    
+    // Auto-save before running to ensure backend has the latest content
+    await handleSave();
+    
     setIsRunning(true);
     setError('');
     setTerminalHistory(['> Executing ' + activeFile.name + '...', '']);
@@ -147,11 +151,14 @@ const CloudEditor = ({ onMenuClick }) => {
       codeToRender = `<html><head><style>${content}</style></head><body><h1>CSS Preview</h1><p>This is how your CSS looks.</p></body></html>`;
     } else if (ext === 'js' || ext === 'jsx') {
       codeToRender = `<html><body><div id="root"></div><script>${content}<\/script></body></html>`;
-    } else {
-      codeToRender = `<html><body style="font-family: sans-serif; color: #333;"><h1>Output:</h1><pre>${content}</pre></body></html>`;
     }
-    
-    setWebPreviewCode(codeToRender);
+
+    if (codeToRender) {
+      setWebPreviewCode(codeToRender);
+    } else {
+      // Show a subtle terminal-style starting message
+      setWebPreviewCode(`<html><body style="background: #0f172a; color: #38bdf8; font-family: monospace; padding: 30px; margin: 0;">[System] Initializing execution...<br/>[System] Running ${activeFile.name}...</body></html>`);
+    }
 
     // Switch to preview tab on mobile
     if (window.innerWidth < 1280) {
@@ -165,14 +172,42 @@ const CloudEditor = ({ onMenuClick }) => {
         sessionId: sessionId,
       });
 
-      if (response.success && response.output) {
-        setTerminalHistory(prev => [...prev, response.output, '', '> Execution finished.']);
-        
-        // Also update web preview if it's HTML/JS
-        const ext = activeFile.name.split('.').pop().toLowerCase();
-        if (['html', 'htm', 'js', 'jsx'].includes(ext)) {
-          setWebPreviewCode(activeFile.content);
-        }
+      if (response.success && response.output !== undefined) {
+        // If it's a non-web file with output from backend, show it in the preview panel
+        const outputHtml = `
+          <html>
+            <head>
+              <style>
+                body { font-family: 'Consolas', 'Monaco', monospace; background: #0f172a; color: #38bdf8; padding: 30px; margin: 0; line-height: 1.6; }
+                .header { color: #f8fafc; font-family: sans-serif; border-bottom: 1px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px; display: flex; items-center; gap: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+                .output { white-space: pre-wrap; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); color: #fff; }
+                .error-header { color: #ef4444; margin-top: 30px; }
+                .error { color: #fca5a5; background: #450a0a; border-color: #7f1d1d; }
+                .label { color: #64748b; font-size: 10px; margin-bottom: 5px; display: block; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <span style="color: #ef4444;">⬤</span> Terminal Output
+              </div>
+              <span class="label">STDOUT</span>
+              <div class="output">${response.output || '<span style="color: #64748b;">(Process finished with no output)</span>'}</div>
+              
+              ${response.error ? `
+                <div class="header error-header">
+                  <span style="color: #ef4444;">⚠</span> Runtime Errors
+                </div>
+                <span class="label">STDERR</span>
+                <div class="output error">${response.error}</div>
+              ` : ''}
+              
+              <div style="margin-top: 40px; color: #475569; font-size: 11px; text-align: center; border-top: 1px solid #1e293b; padding-top: 20px;">
+                Ignito Vlab Execution Engine v1.0
+              </div>
+            </body>
+          </html>
+        `;
+        setWebPreviewCode(outputHtml);
       }
     } catch (runError) {
       setError(runError.message || 'Unable to run file');
