@@ -73,6 +73,7 @@ const CloudEditor = ({ onMenuClick }) => {
   const [terminalHistory, setTerminalHistory] = useState(['Welcome to Ignito Cloud IDE Terminal', 'Type code and press Run to see output...', '']);
   const [webPreviewCode, setWebPreviewCode] = useState('');
   const fileInputRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('editor'); // 'editor' or 'preview'
   const [sessionId] = useState(() => `sess_${Math.random().toString(36).substr(2, 9)}`);
 
   useEffect(() => {
@@ -141,6 +142,11 @@ const CloudEditor = ({ onMenuClick }) => {
     }
     
     setWebPreviewCode(codeToRender);
+
+    // Switch to preview tab on mobile
+    if (window.innerWidth < 1280) {
+      setActiveTab('preview');
+    }
 
     try {
       await runFile({
@@ -221,11 +227,11 @@ const CloudEditor = ({ onMenuClick }) => {
   };
 
   return (
-    <Box className="flex-1 flex flex-col min-h-0 bg-[#181818] app-shell h-full">
+    <Box className="flex-1 flex flex-col min-h-0 bg-[#181818] h-full overflow-hidden">
       <Header onMenuClick={onMenuClick} title="Cloud IDE" />
 
-      <Box className="flex-1 flex overflow-hidden">
-        <Box className="hidden md:flex w-[260px] bg-[#252526] border-r border-[#333] flex-col">
+      <Box className="flex-1 flex min-h-0">
+        <Box className="hidden xl:flex w-[260px] bg-[#252526] border-r border-[#333] flex-col shrink-0">
           <Box className="p-4 flex items-center justify-between">
             <Typography className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
               <MdChevronRight size={16} style={{ color: 'white' }} /> Explorer
@@ -282,16 +288,16 @@ const CloudEditor = ({ onMenuClick }) => {
           </Box>
         </Box>
 
-        <Box className="flex-1 flex flex-col bg-[#1e1e1e] min-w-0">
-          {error && <Alert severity="warning" className="m-3 rounded-xl">{error}</Alert>}
+        <Box className="flex-1 flex flex-col bg-[#1e1e1e] min-w-0 overflow-hidden h-full">
+          {error && <Alert severity="warning" className="m-3 rounded-xl shrink-0">{error}</Alert>}
 
-          <Box className="min-h-10 bg-[#2d2d2d] flex items-center justify-between px-4 border-b border-[#181818] gap-3">
+          <Box className="sticky top-0 xl:relative z-20 min-h-10 bg-[#2d2d2d] flex items-center justify-between px-4 border-b border-[#181818] gap-3 shrink-0">
             <Box className="flex h-full min-w-0 overflow-x-auto">
               {files.map((file, i) => (
                 <Box
                   key={file.path}
                   onClick={() => setActiveFileIndex(i)}
-                  className={`h-full flex items-center gap-2 px-6 cursor-pointer border-r border-[#181818] transition-all whitespace-nowrap ${activeFileIndex === i ? 'bg-[#1e1e1e] text-white border-t-2 border-t-red-600' : 'bg-[#2d2d2d] text-slate-500 hover:bg-[#1e1e1e]'}`}
+                  className={`h-full flex items-center gap-2 px-6 cursor-pointer border-r border-[#181818] transition-all whitespace-nowrap ${activeFileIndex === i ? 'bg-[#1e1e1e] text-white' : 'bg-[#2d2d2d] text-slate-500 hover:bg-[#1e1e1e]'}`}
                 >
                   <Typography className="text-[12px] font-medium">{file.name}</Typography>
                   <MdClose size={12} className="opacity-60" />
@@ -334,9 +340,28 @@ const CloudEditor = ({ onMenuClick }) => {
             </Box>
           </Box>
 
-          <Box className="flex-1 flex min-h-0 relative">
+          {/* Mobile Tab Switcher */}
+          <Box className="xl:hidden flex bg-[#252526] border-b border-[#181818] shrink-0">
+            <Button 
+              onClick={() => setActiveTab('editor')}
+              className={`flex-1 !rounded-none !py-3 !font-black !text-[11px] !tracking-widest uppercase transition-all ${activeTab === 'editor' ? '!bg-[#1e1e1e] !text-red-500 !border-b-2 !border-red-500' : '!text-slate-500'}`}
+            >
+              Code Editor
+            </Button>
+            <Button 
+              onClick={() => setActiveTab('preview')}
+              className={`flex-1 !rounded-none !py-3 !font-black !text-[11px] !tracking-widest uppercase transition-all ${activeTab === 'preview' ? '!bg-[#1e1e1e] !text-red-500 !border-b-2 !border-red-500' : '!text-slate-500'}`}
+            >
+              Live Preview {webPreviewCode && <div className="ml-2 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
+            </Button>
+          </Box>
+
+          <Box className="flex-1 flex flex-col xl:flex-row min-h-0 relative overflow-hidden">
             {/* Editor Side */}
-            <Box className="flex-1 flex flex-col border-r border-[#333]">
+            <Box 
+              id="editor-area" 
+              className={`flex-1 flex flex-col border-b xl:border-b-0 xl:border-r border-[#333] ${activeTab === 'editor' ? 'flex' : 'hidden xl:flex'}`}
+            >
               {activeFile ? (
                 <Editor
                   height="100%"
@@ -351,36 +376,39 @@ const CloudEditor = ({ onMenuClick }) => {
                   options={{ fontSize: 14, minimap: { enabled: true }, automaticLayout: true, scrollBeyondLastLine: false }}
                 />
               ) : (
-                <Box className="h-full flex flex-col items-center justify-center text-slate-400 gap-6 p-8 text-center">
-                  <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center mb-2 border border-white/10 shadow-2xl">
-                    <MdInsertDriveFile size={48} className="text-red-500/50" />
+                <Box className="h-full flex flex-col items-center justify-center text-slate-400 gap-4 p-4 sm:p-8 text-center">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-white/5 flex items-center justify-center mb-2 border border-white/10 shadow-2xl">
+                    <MdInsertDriveFile size={32} className="text-red-500/50 sm:text-[48px]" style={{ color: '#ef4444' }} />
                   </div>
-                  <div className="space-y-2">
-                    <Typography className="text-2xl font-black text-white uppercase tracking-tighter">Start Coding</Typography>
-                    <Typography className="text-sm text-slate-500 max-w-xs mx-auto">Create a new file to start building your project in the Ignito Cloud IDE.</Typography>
+                  <div className="space-y-1 sm:space-y-2">
+                    <Typography className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter">Start Coding</Typography>
+                    <Typography className="text-xs sm:text-sm text-slate-500 max-w-xs mx-auto">Create a new file to start building your project in the Ignito Cloud IDE.</Typography>
                   </div>
                   <Button 
                     onClick={handleAddFile} 
                     variant="contained" 
                     size="large"
-                    className="!bg-red-600 !text-white !font-black !px-8 !py-3 !rounded-xl !shadow-xl !shadow-red-600/20 hover:!bg-red-700 transition-all hover:scale-105 active:scale-95"
+                    className="!bg-red-600 !text-white !font-black !px-6 sm:!px-8 !py-2 sm:!py-3 !rounded-lg sm:!rounded-xl !shadow-xl !shadow-red-600/20 hover:!bg-red-700 transition-all hover:scale-105 active:scale-95"
                     startIcon={<MdAdd size={20} />}
                   >
                     Create New File
                   </Button>
-                  <div className="flex items-center gap-6 mt-8 opacity-20">
-                    <MdJavascript size={24} />
-                    <MdCode size={24} />
-                    <MdHtml size={24} />
-                    <MdCss size={24} />
+                  <div className="flex items-center gap-4 sm:gap-6 mt-4 sm:mt-8 opacity-20">
+                    <MdJavascript size={20} className="sm:text-[24px]" />
+                    <MdCode size={20} className="sm:text-[24px]" />
+                    <MdHtml size={20} className="sm:text-[24px]" />
+                    <MdCss size={20} className="sm:text-[24px]" />
                   </div>
                 </Box>
               )}
             </Box>
 
             {/* W3Schools style Web Output Side */}
-            <Box className="w-1/2 md:w-[400px] lg:w-[500px] bg-white flex flex-col">
-              <Box className="px-4 h-10 bg-[#f1f1f1] flex items-center justify-between border-b border-[#ddd]">
+            <Box 
+              id="web-preview-area" 
+              className={`w-full xl:w-[450px] 2xl:w-[550px] bg-white flex flex-col shrink-0 ${activeTab === 'preview' ? 'flex' : 'hidden xl:flex'}`}
+            >
+              <Box className="px-4 h-10 bg-[#f1f1f1] flex items-center justify-between border-b border-[#ddd] shrink-0">
                 <Typography className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
                   <MdPlayArrow size={14} className="text-emerald-600" /> Web View Result
                 </Typography>
@@ -388,6 +416,16 @@ const CloudEditor = ({ onMenuClick }) => {
                   <div className="w-2 h-2 rounded-full bg-red-400" />
                   <div className="w-2 h-2 rounded-full bg-yellow-400" />
                   <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <IconButton 
+                    size="small" 
+                    onClick={() => {
+                      setWebPreviewCode('');
+                      if (window.innerWidth < 1280) setActiveTab('editor');
+                    }} 
+                    className="ml-2 hover:text-red-600"
+                  >
+                    <MdClose size={16} />
+                  </IconButton>
                 </Box>
               </Box>
               <Box className="flex-1 bg-white relative">
@@ -414,10 +452,7 @@ const CloudEditor = ({ onMenuClick }) => {
             </Box>
           </Box>
 
-          <Box className="h-6 bg-red-600 flex items-center justify-between px-4 text-white text-[10px] font-black uppercase tracking-widest">
-            <div className="flex items-center gap-4"><span>{isSaving ? 'Saving...' : 'Ready'}</span></div>
-            <div className="flex items-center gap-4"><span>UTF-8</span><span>{(activeFile?.language || 'text').toUpperCase()}</span></div>
-          </Box>
+
         </Box>
       </Box>
     </Box>

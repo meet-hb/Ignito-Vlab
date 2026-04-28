@@ -28,7 +28,7 @@ const PageWrapper = ({ children }) => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
     transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-    className="flex-1 h-screen overflow-hidden flex flex-col"
+    className="flex-1 h-full min-h-0 overflow-hidden flex flex-col"
   >
     {children}
   </motion.div>
@@ -50,7 +50,7 @@ function AuthenticatedApp({ isSidebarOpen, isCollapsed, toggleSidebar, setIsSide
   }
 
   return (
-    <Box className="min-h-screen flex bg-ignito-bg font-sans overflow-hidden">
+    <Box className="h-screen flex bg-ignito-bg font-sans overflow-hidden">
       {/* Sidebar - Desktop */}
       <motion.div 
         animate={{ width: isCollapsed ? 80 : 280 }}
