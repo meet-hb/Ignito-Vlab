@@ -88,7 +88,7 @@ function AuthenticatedApp({ isSidebarOpen, isCollapsed, toggleSidebar, setIsSide
           <Route path="/admin/users/new" element={<PageWrapper><CreateUser onMenuClick={toggleSidebar} /></PageWrapper>} />
           <Route path="/admin/users" element={<PageWrapper><AllUsers onMenuClick={toggleSidebar} /></PageWrapper>} />
           <Route path="/admin/policies/new" element={<PageWrapper><CreatePolicy onMenuClick={toggleSidebar} /></PageWrapper>} />
-          {/* <Route path="/admin/labs/view/:id" element={<PageWrapper><ViewLab onMenuClick={toggleSidebar} /></PageWrapper>} /> */}
+          <Route path="/admin/labs/view/:id" element={<PageWrapper><ViewLab onMenuClick={toggleSidebar} /></PageWrapper>} />
           
           {/* Compute Routes */}
           <Route path="/admin/compute" element={<Navigate to="/admin/compute/instances" replace />} />
