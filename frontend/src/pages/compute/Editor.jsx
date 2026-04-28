@@ -82,9 +82,6 @@ const CloudEditor = ({ onMenuClick }) => {
         const response = await fetchFiles();
         if (isMounted && response.success) {
           setFiles(response.files);
-          if (response.files.length > 0) {
-            setActiveFileIndex(0);
-          }
         }
       } catch (err) {
         if (isMounted) setError('Failed to load workspace files');
@@ -113,6 +110,8 @@ const CloudEditor = ({ onMenuClick }) => {
       await saveFile({
         path: activeFile.path,
         content: activeFile.content,
+        name: activeFile.name,
+        language: activeFile.language,
       });
     } catch (saveError) {
       setError(saveError.message || 'Unable to save file');
@@ -228,23 +227,23 @@ const CloudEditor = ({ onMenuClick }) => {
       <Box className="flex-1 flex overflow-hidden">
         <Box className="hidden md:flex w-[260px] bg-[#252526] border-r border-[#333] flex-col">
           <Box className="p-4 flex items-center justify-between">
-            <Typography className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <MdChevronRight size={16} /> Explorer
+            <Typography className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <MdChevronRight size={16} style={{ color: 'white' }} /> Explorer
             </Typography>
             <div className="flex items-center gap-1">
               <Tooltip title="New File">
-                <IconButton onClick={handleAddFile} className="text-slate-400 hover:text-white p-1">
-                  <MdAdd size={18} />
+                <IconButton onClick={handleAddFile} className="hover:text-red-500 p-1">
+                  <MdAdd size={18} style={{ color: 'white' }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title="New Folder">
-                <IconButton onClick={handleAddFolder} className="text-slate-400 hover:text-white p-1">
-                  <MdCreateNewFolder size={18} />
+                <IconButton onClick={handleAddFolder} className="hover:text-red-500 p-1">
+                  <MdCreateNewFolder size={18} style={{ color: 'white' }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Upload File">
-                <IconButton onClick={() => fileInputRef.current?.click()} className="text-slate-400 hover:text-white p-1">
-                  <MdFileUpload size={18} />
+                <IconButton onClick={() => fileInputRef.current?.click()} className="hover:text-red-500 p-1">
+                  <MdFileUpload size={18} style={{ color: 'white' }} />
                 </IconButton>
               </Tooltip>
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} style={{ display: 'none' }} />
@@ -301,7 +300,7 @@ const CloudEditor = ({ onMenuClick }) => {
             </Box>
 
             <Box className="flex items-center gap-4 shrink-0">
-              <IconButton onClick={handleFormat} className="text-white hover:text-red-400 p-1.5"><MdFormatAlignLeft size={18} /></IconButton>
+              <IconButton onClick={handleFormat} className="hover:!text-red-500 p-1.5"><MdFormatAlignLeft size={18} style={{ color: 'white' }} /></IconButton>
               <IconButton 
                 onClick={() => {
                   handleSave();
@@ -318,9 +317,9 @@ const CloudEditor = ({ onMenuClick }) => {
                     URL.revokeObjectURL(url);
                   }
                 }} 
-                className="text-white hover:text-emerald-400 p-1.5"
+                className="hover:!text-emerald-500 p-1.5"
               >
-                <MdSave size={18} />
+                <MdSave size={18} style={{ color: 'white' }} />
               </IconButton>
               <Button
                 onClick={handleRun}
@@ -352,10 +351,29 @@ const CloudEditor = ({ onMenuClick }) => {
                   options={{ fontSize: 14, minimap: { enabled: true }, automaticLayout: true, scrollBeyondLastLine: false }}
                 />
               ) : (
-                <Box className="h-full flex flex-col items-center justify-center text-slate-600 gap-4">
-                  <MdSettings size={64} className="opacity-10" />
-                  <Typography className="text-sm font-bold uppercase tracking-widest opacity-40">No file selected</Typography>
-                  <Button onClick={handleAddFile} variant="outlined" className="!border-white/10 !text-slate-400 hover:!bg-white/5">Create New File</Button>
+                <Box className="h-full flex flex-col items-center justify-center text-slate-400 gap-6 p-8 text-center">
+                  <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center mb-2 border border-white/10 shadow-2xl">
+                    <MdInsertDriveFile size={48} className="text-red-500/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Typography className="text-2xl font-black text-white uppercase tracking-tighter">Start Coding</Typography>
+                    <Typography className="text-sm text-slate-500 max-w-xs mx-auto">Create a new file to start building your project in the Ignito Cloud IDE.</Typography>
+                  </div>
+                  <Button 
+                    onClick={handleAddFile} 
+                    variant="contained" 
+                    size="large"
+                    className="!bg-red-600 !text-white !font-black !px-8 !py-3 !rounded-xl !shadow-xl !shadow-red-600/20 hover:!bg-red-700 transition-all hover:scale-105 active:scale-95"
+                    startIcon={<MdAdd size={20} />}
+                  >
+                    Create New File
+                  </Button>
+                  <div className="flex items-center gap-6 mt-8 opacity-20">
+                    <MdJavascript size={24} />
+                    <MdCode size={24} />
+                    <MdHtml size={24} />
+                    <MdCss size={24} />
+                  </div>
                 </Box>
               )}
             </Box>
