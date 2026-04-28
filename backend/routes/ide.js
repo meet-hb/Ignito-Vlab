@@ -1,10 +1,7 @@
 import express from 'express';
 const router = express.Router();
 
-const FILES = [
-  { name: 'main.py', path: '/workspace/main.py', type: 'file', content: "print('Hello from Ignito Vlab!')", language: 'python' },
-  { name: 'utils.py', path: '/workspace/utils.py', type: 'file', content: "def help():\n    print('Helping...')", language: 'python' }
-];
+const FILES = [];
 
 // GET /api/files
 router.get('/', (req, res) => {
@@ -26,13 +23,22 @@ router.get('/content', (req, res) => {
 
 // POST /api/save
 router.post('/save', (req, res) => {
-  const { path, content } = req.body;
-  const file = FILES.find(f => f.path === path);
-  if (file) {
-    file.content = content;
+  const { path, content, name, language } = req.body;
+  const fileIndex = FILES.findIndex(f => f.path === path);
+  
+  if (fileIndex !== -1) {
+    FILES[fileIndex].content = content;
     res.json({ success: true, message: "File saved successfully" });
   } else {
-    res.status(404).json({ success: false, message: "File not found" });
+    // Create new file
+    FILES.push({
+      name: name || path.split('/').pop(),
+      path: path,
+      type: 'file',
+      content: content || '',
+      language: language || 'python'
+    });
+    res.json({ success: true, message: "File created and saved successfully" });
   }
 });
 
