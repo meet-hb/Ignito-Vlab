@@ -31,7 +31,7 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
                  <img 
                    src={lab.logo} 
                    alt={lab.title} 
-                   className="max-h-[70%] max-w-[70%] object-contain transition-transform duration-500 group-hover:scale-110 relative z-10"
+                   className="max-h-[70%] max-w-[70%] object-contain transition-transform duration-[1200ms] cubic-bezier(0.4, 0, 0.2, 1) group-hover:scale-105 relative z-10"
                    referrerPolicy="no-referrer"
                  />
               </div>
