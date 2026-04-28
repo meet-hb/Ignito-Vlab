@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Alert } from '@mui/material';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { MdTrendingUp, MdLayers, MdHourglassEmpty } from 'react-icons/md';
 
 import Header from '../components/Header';
@@ -24,7 +24,14 @@ export default function Dashboard({ onMenuClick }) {
       bg: 'bg-red-50',
       icon: MdTrendingUp
     },
-  ]), [labs]);
+    {
+      label: 'Active Sub-labs',
+      value: Object.keys(subLabs).reduce((acc, key) => acc + subLabs[key].length, 0),
+      color: 'text-slate-900',
+      bg: 'bg-slate-50',
+      icon: MdLayers
+    }
+  ]), [labs, subLabs]);
 
   return (
     <Box className="flex-1 flex flex-col min-w-0 bg-slate-50 app-shell h-full overflow-hidden">
@@ -53,18 +60,18 @@ export default function Dashboard({ onMenuClick }) {
               <Typography className="text-xs text-slate-400 uppercase tracking-[0.4em] font-black mt-4 ml-1">Centralized Infrastructure Hub</Typography>
             </div>
 
-            {/* Statistics Card */}
+            {/* Statistics Cards */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }} 
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-              className="w-full lg:w-auto min-w-[320px]"
+              className="flex flex-col sm:flex-row gap-4"
             > 
               {stats.map((stat, i) => (
                 <motion.div 
                   key={i} 
                   whileHover={{ y: -5 }}
-                  className="relative overflow-hidden frosted-card p-5 flex items-center justify-between group transition-all duration-300 border border-white min-h-[110px]"
+                  className="relative overflow-hidden frosted-card p-5 flex items-center justify-between group transition-all duration-300 border border-white min-h-[110px] min-w-[240px]"
                 >
                   <div className="relative z-10">
                     <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{stat.label}</Typography>

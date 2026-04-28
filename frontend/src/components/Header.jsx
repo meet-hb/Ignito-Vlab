@@ -18,7 +18,7 @@ import {
   MdSupportAgent,
   MdNotificationsNone
 } from 'react-icons/md';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { useLabStore } from '../store/labStore';
 
@@ -30,18 +30,26 @@ const Header = ({ onMenuClick, title, onBack }) => {
   const { labs, subLabs } = useLabStore();
   const open = Boolean(anchorEl);
 
+  // Combine all labs and sub-labs into one searchable list
   const ALL_SEARCH_DATA = React.useMemo(() => {
     const data = [];
+    
+    // Add Main Labs
     labs.forEach(lab => {
       data.push({ id: lab.id, type: 'Category', name: lab.title, path: `/admin/labs` });
     });
+
+    // Add Sub Labs
     Object.values(subLabs).forEach(subList => {
       subList.forEach(sub => {
         data.push({ id: sub.id, type: 'Lab', name: sub.title, path: `/admin/labs/view/${sub.id}` });
       });
     });
+
+    // Add Mock Users/Policies for now
     data.push({ id: 'u1', type: 'User', name: 'Meet Nayak', path: '/admin/users' });
     data.push({ id: 'p1', type: 'Policy', name: 'Global Admin Policy', path: '/admin/policies' });
+    
     return data;
   }, [labs, subLabs]);
 
@@ -50,7 +58,7 @@ const Header = ({ onMenuClick, title, onBack }) => {
       const filtered = ALL_SEARCH_DATA.filter(item => 
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      setSearchResults(filtered.slice(0, 8));
+      setSearchResults(filtered.slice(0, 8)); // Limit to 8 results
     } else {
       setSearchResults([]);
     }

@@ -1,23 +1,39 @@
 import { apiRequest } from '../lib/apiClient';
 
+// Helper to get sessionId from URL or state
+const getActiveSessionId = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('sessionId') || localStorage.getItem('activeVlabSessionId');
+};
+
 export async function fetchFiles() {
-  return apiRequest('/files');
+  const sessionId = getActiveSessionId();
+  return apiRequest('/files', {
+    headers: { 'x-session-id': sessionId }
+  });
 }
 
 export async function fetchFileContent(path) {
-  return apiRequest(`/files/content?path=${encodeURIComponent(path)}`);
+  const sessionId = getActiveSessionId();
+  return apiRequest(`/files/content?path=${encodeURIComponent(path)}`, {
+    headers: { 'x-session-id': sessionId }
+  });
 }
 
 export async function saveFile(payload) {
+  const sessionId = getActiveSessionId();
   return apiRequest('/save', {
     method: 'POST',
+    headers: { 'x-session-id': sessionId },
     body: payload,
   });
 }
 
 export async function runFile(payload) {
+  const sessionId = getActiveSessionId();
   return apiRequest('/run', {
     method: 'POST',
+    headers: { 'x-session-id': sessionId },
     body: payload,
   });
 }

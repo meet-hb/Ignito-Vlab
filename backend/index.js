@@ -18,6 +18,12 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json());
 
+// Request Logger Middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Register Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

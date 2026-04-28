@@ -3,8 +3,10 @@ import { Box, Card, Typography, Button } from '@mui/material';
 import { motion } from 'motion/react';
 import { MdChevronRight, MdTerminal } from 'react-icons/md';
 import { useLabStore } from '../store/labStore';
+import { useNavigate, Link } from 'react-router-dom';
 
 const LabGrid = ({ onLabClick, labs: labsProp }) => {
+  const navigate = useNavigate();
   const { labs: storeLabs } = useLabStore();
   const labs = labsProp || storeLabs;
 
@@ -52,17 +54,19 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
 
               {/* Action Section */}
               <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
-                <Button 
-                  variant="contained" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open('/admin/compute/rdp?app=vscode', '_blank', 'noopener,noreferrer');
-                  }}
-                  className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-8 py-3 font-black text-xs tracking-widest transition-all group-hover:shadow-lg group-hover:shadow-red-500/20 uppercase"
-                  endIcon={<MdChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />}
+                <Link 
+                  to={`/admin/labs/view/${lab.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ textDecoration: 'none' }}
                 >
-                  Start Lab
-                </Button>
+                  <Button 
+                    variant="contained" 
+                    className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-8 py-3 font-black text-xs tracking-widest transition-all group-hover:shadow-lg group-hover:shadow-red-500/20 uppercase"
+                    endIcon={<MdChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />}
+                  >
+                    Start Lab
+                  </Button>
+                </Link>
                 <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   System Online

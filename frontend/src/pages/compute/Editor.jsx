@@ -74,11 +74,21 @@ const CloudEditor = ({ onMenuClick }) => {
   const [webPreviewCode, setWebPreviewCode] = useState('');
   const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState('editor'); // 'editor' or 'preview'
-  const [sessionId] = useState(() => `sess_${Math.random().toString(36).substr(2, 9)}`);
+  const [sessionId] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('sessionId') || '';
+  });
+
+  useEffect(() => {
+    if (!sessionId) {
+      setError('Active session required. Please start a lab first.');
+    }
+  }, [sessionId]);
 
   useEffect(() => {
     let isMounted = true;
     const loadFiles = async () => {
+      if (!sessionId) return;
       try {
         const response = await fetchFiles();
         if (isMounted && response.success) {
@@ -90,7 +100,7 @@ const CloudEditor = ({ onMenuClick }) => {
     };
     loadFiles();
     return () => { isMounted = false; };
-  }, []);
+  }, [sessionId]);
 
   const activeFile = files[activeFileIndex];
 
@@ -104,7 +114,7 @@ const CloudEditor = ({ onMenuClick }) => {
   };
 
   const handleSave = async () => {
-    if (!activeFile) return;
+    if (!activeFile || !sessionId) return;
     setIsSaving(true);
     setError('');
     try {
@@ -129,6 +139,7 @@ const CloudEditor = ({ onMenuClick }) => {
     
     setIsRunning(true);
     setError('');
+    setTerminalHistory(['> Executing ' + activeFile.name + '...', '']);
     
     // Generate Web Preview
     let codeToRender = '';
@@ -496,8 +507,6 @@ const CloudEditor = ({ onMenuClick }) => {
               </Box>
             </Box>
           </Box>
-
-
         </Box>
       </Box>
     </Box>
