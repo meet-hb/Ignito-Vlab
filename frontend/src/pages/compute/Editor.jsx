@@ -62,7 +62,7 @@ const detectLanguage = (fileName) => {
   return 'text';
 };
 
-const CloudEditor = ({ onMenuClick, session: propSession, hideHeader }) => {
+const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerminal }) => {
   const navigate = useNavigate();
   const editorRef = useRef(null);
   const [files, setFiles] = useState([]);
@@ -346,16 +346,18 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader }) => {
             ))}
           </Box>
 
-          <Box className="p-4 bg-[#333]/30 border-t border-[#333]">
-            <Button
-              onClick={() => navigate('/admin/compute/terminals')}
-              startIcon={<MdOutlineTerminal />}
-              fullWidth
-              className="!text-[10px] !font-black !text-slate-400 !bg-transparent hover:!text-white uppercase tracking-widest"
-            >
-              Open Terminal
-            </Button>
-          </Box>
+          {!new URLSearchParams(window.location.search).get('labId')?.toLowerCase().includes('linux') ? null : (
+            <Box className="p-4 bg-[#333]/30 border-t border-[#333]">
+              <Button
+                onClick={() => onOpenTerminal ? onOpenTerminal() : navigate('/admin/compute/terminals')}
+                startIcon={<MdOutlineTerminal />}
+                fullWidth
+                className="!text-[10px] !font-black !text-slate-400 !bg-transparent hover:!text-white uppercase tracking-widest"
+              >
+                Open Terminal
+              </Button>
+            </Box>
+          )}
         </Box>
 
         <Box className="flex-1 flex flex-col bg-[#1e1e1e] min-w-0 overflow-hidden h-full">

@@ -6,7 +6,8 @@ import {
   Tooltip,
   Paper,
   Avatar,
-  Divider
+  Divider,
+  Button
 } from '@mui/material';
 import { 
   MdClose, 
@@ -24,7 +25,7 @@ import {
 import { VscCode } from 'react-icons/vsc';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { fetchUserActiveSession, startLabSession, fetchLabSessionStatus } from '../../services/labService';
+import { fetchUserActiveSession, startLabSession, fetchLabSessionStatus, stopLabSession } from '../../services/labService';
 import CloudEditor from './Editor';
 import Terminal from './Terminal';
 
@@ -62,58 +63,64 @@ const RemoteDesktop = () => {
   const [session, setSession] = useState(null);
   const [error, setError] = useState('');
 
+  const initStartedRef = useRef(false);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const labId = params.get('labId');
     
     const initializeSession = async () => {
-      if (!labId || !user?.email) {
-        setConnecting(false);
-        return;
-      }
+      if (!labId || !user?.email || initStartedRef.current) return;
+      initStartedRef.current = true;
 
       try {
-        setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Authenticating user session...`]);
+        setConnectionLog(prev => [`[${new Date().toLocaleTimeString()}] Connecting to Ignito Cloud Core...`]);
         
         // 1. Check for existing session
         const activeRes = await fetchUserActiveSession(user.email);
+        let activeSession = null;
+
         if (activeRes.success && activeRes.session && activeRes.session.labId === labId) {
-          setSession(activeRes.session);
-          setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Resuming existing session: ${activeRes.session.sessionId}`]);
+          activeSession = activeRes.session;
+          setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Found existing session: ${activeSession.sessionId}`]);
         } else {
           // 2. Start new session
-          setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] No active session found. Provisioning new environment for Lab: ${labId}...`]);
           const startRes = await startLabSession({ labId, userId: user.email });
-          
-          let currentStatus = 'starting';
-          let statusRes = null;
-          
-          while (currentStatus === 'starting') {
-            statusRes = await fetchLabSessionStatus(startRes.sessionId);
-            currentStatus = statusRes.status;
-            if (currentStatus === 'starting') {
-              setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Infrastructure provisioning in progress...`]);
-              await new Promise(r => setTimeout(r, 3000));
-            }
-          }
-          
-          if (currentStatus === 'running') {
-            setSession(statusRes);
-            setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Environment ready! Connecting to Remote Desktop...`]);
-          } else {
-            throw new Error('Failed to start lab environment');
+          activeSession = startRes;
+          setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Provisioning new environment...`]);
+        }
+
+        // Wait if starting
+        let currentStatus = activeSession.status || 'starting';
+        let statusRes = activeSession;
+        
+        while (currentStatus === 'starting') {
+          statusRes = await fetchLabSessionStatus(activeSession.sessionId);
+          currentStatus = statusRes.status;
+          if (currentStatus === 'starting') {
+            setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Provisioning environment...`]);
+            await new Promise(r => setTimeout(r, 1000));
           }
         }
         
-        setTimeout(() => setConnecting(false), 1500);
+        if (currentStatus === 'running') {
+          setSession(statusRes);
+          setConnecting(false);
+        } else {
+          throw new Error(statusRes.message || 'Failed to start lab environment');
+        }
+        
       } catch (err) {
         setError(err.message || 'Failed to initialize session');
         setConnectionLog(prev => [...prev, `[ERROR] ${err.message}`]);
+        initStartedRef.current = false; // Allow retry on error
       }
     };
 
-    initializeSession();
-  }, [location.search, user]);
+    if (user?.email) {
+      initializeSession();
+    }
+  }, [location.search, user?.email]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -141,6 +148,20 @@ const RemoteDesktop = () => {
     setShowStartMenu(false);
   };
 
+  const handleStopLab = async () => {
+    if (!window.confirm('Are you sure you want to stop this lab session? All unsaved work will be lost.')) return;
+    
+    try {
+      if (session?.sessionId) {
+        await stopLabSession(session.sessionId);
+      }
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to stop lab:', err);
+      navigate('/'); // Still navigate back to be safe
+    }
+  };
+
   const closeWindow = (id) => {
     setOpenWindows(openWindows.filter(w => w.id !== id));
     setMaximizedWindows(maximizedWindows.filter(winId => winId !== id));
@@ -163,36 +184,113 @@ const RemoteDesktop = () => {
 
   useEffect(() => {
     if (connecting || hasAutoOpenedRef.current) return;
-    const appToOpen = new URLSearchParams(location.search).get('app');
+    
+    const params = new URLSearchParams(location.search);
+    const appToOpen = params.get('app');
+    const labId = params.get('labId')?.toLowerCase() || '';
+
+    // If explicit app is requested, open it
     if (appToOpen) {
       toggleWindow(appToOpen);
+      hasAutoOpenedRef.current = true;
+    } 
+    // If it's a Linux lab, prioritize Terminal
+    else if (labId.includes('linux')) {
+      toggleWindow('terminal');
+      if (!maximizedWindows.includes('terminal')) {
+        setMaximizedWindows(prev => [...prev, 'terminal']);
+      }
+      hasAutoOpenedRef.current = true;
+    }
+    // Default to VS Code for everything else
+    else {
+      toggleWindow('vscode');
       hasAutoOpenedRef.current = true;
     }
   }, [connecting, location.search]);
 
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingStatus, setLoadingStatus] = useState('Initializing connection...');
+
+  useEffect(() => {
+    if (!connecting) return;
+    
+    const interval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 95) return 95;
+        // Progress slows down as it gets closer to 95
+        const increment = Math.max(0.1, (95 - prev) / 20);
+        return prev + increment;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [connecting]);
+
+  useEffect(() => {
+    if (!connecting) return;
+    const statuses = [
+      'Allocating cloud resources...',
+      'Requesting Fargate task...',
+      'Pulling container image...',
+      'Configuring network bridge...',
+      'Initializing secure tunnel...',
+      'Starting container services...',
+      'Optimizing display stream...',
+      'Preparing your workspace...'
+    ];
+    let i = 0;
+    const interval = setInterval(() => {
+      setLoadingStatus(statuses[i % statuses.length]);
+      i++;
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [connecting]);
+
   if (connecting) {
     return (
-      <Box className="h-screen w-screen bg-[#0a0a0a] flex items-center justify-center font-mono p-4">
-        <Box className="max-w-xl w-full">
-           <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-4">
-                <Box className="w-12 h-12 rounded-2xl bg-red-600 flex items-center justify-center text-white">
-                  <MdWifi size={24} className="animate-pulse" />
-                </Box>
-                <div>
-                  <Typography className="text-white font-black text-xl">Ignito Remote Desktop</Typography>
-                  <Typography className="text-slate-500 text-[10px] uppercase tracking-widest font-bold">Secure WebRTC Tunnel</Typography>
-                </div>
-              </div>
+      <Box className="h-screen w-screen bg-[#0a0a0a] flex items-center justify-center p-6">
+        <Box className="max-w-md w-full relative">
+          {/* Animated Background Glow */}
+          <div className="absolute -inset-20 bg-red-600/10 blur-[100px] rounded-full animate-pulse" />
+          
+          <div className="relative flex flex-col items-center gap-8 text-center">
+            {/* Logo / Icon */}
+            <Box className="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white shadow-2xl shadow-red-600/20 rotate-3 animate-bounce">
+              <MdWifi size={40} />
+            </Box>
 
-              <Box className="bg-black/50 border border-white/5 rounded-2xl p-6 min-h-[300px] overflow-auto">
-                {connectionLog.map((log, i) => (
-                  <div key={i} className="text-[11px] text-emerald-500/80 mb-1">
-                    <span className="text-slate-600 mr-2">$</span> {log}
-                  </div>
-                ))}
+            <div className="space-y-2">
+              <Typography className="text-white font-black text-3xl tracking-tighter uppercase">Initializing Lab</Typography>
+              <Typography className="text-slate-500 text-xs uppercase tracking-[0.3em] font-bold">Secure WebRTC Tunnel</Typography>
+            </div>
+
+            {/* Progress Area */}
+            <Box className="w-full space-y-6">
+              <Box className="relative h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <Box 
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 to-orange-500 transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                  style={{ width: `${loadingProgress}%` }}
+                />
               </Box>
-           </div>
+              
+              <div className="flex justify-between items-center px-1">
+                <Typography className="text-slate-400 text-[11px] font-black uppercase tracking-widest animate-pulse">
+                  {loadingStatus}
+                </Typography>
+                <Typography className="text-red-500 font-mono text-sm font-bold">
+                  {Math.round(loadingProgress)}%
+                </Typography>
+              </div>
+            </Box>
+
+            {/* Hint / Tip */}
+            <Box className="mt-8 p-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+              <Typography className="text-slate-500 text-[10px] leading-relaxed italic">
+                Tip: Use the sidebar terminal for faster CLI operations while the editor is loading complex project structures.
+              </Typography>
+            </Box>
+          </div>
         </Box>
       </Box>
     );
@@ -202,9 +300,7 @@ const RemoteDesktop = () => {
     <Box 
       className="h-screen w-screen overflow-hidden relative select-none"
       sx={{ 
-        backgroundImage: 'url("https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
       }}
     >
 
@@ -244,13 +340,25 @@ const RemoteDesktop = () => {
                   <Typography className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{win.title}</Typography>
                 </div>
                 <div className="flex items-center gap-2">
-                  <IconButton onClick={() => minimizeWindow(win.id)} size="small" className="text-slate-500 hover:bg-white/10"><MdMinimize size={16} /></IconButton>
-                  <IconButton onClick={() => toggleMaximize(win.id)} size="small" className="text-slate-500 hover:bg-white/10"><MdCropSquare size={16} /></IconButton>
-                  <IconButton onClick={() => closeWindow(win.id)} size="small" className="text-slate-500 hover:bg-red-600 hover:text-white"><MdClose size={16} /></IconButton>
+                  <IconButton onClick={() => minimizeWindow(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-white/10"><MdMinimize size={16} /></IconButton>
+                  <IconButton onClick={() => toggleMaximize(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-white/10"><MdCropSquare size={16} /></IconButton>
+                  <IconButton onClick={() => closeWindow(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-red-600 hover:text-white"><MdClose size={16} /></IconButton>
                 </div>
               </Box>
               <Box className="flex-1 overflow-hidden">
-                 <win.component onMenuClick={() => {}} session={session} hideHeader={true} />
+                 <win.component 
+                   onMenuClick={() => {}} 
+                   session={session} 
+                   hideHeader={win.id === 'terminal' ? !new URLSearchParams(location.search).get('labId')?.toLowerCase().includes('linux') : true} 
+                   onOpenTerminal={() => {
+                     // Minimize VS Code and Open Terminal Fullscreen
+                     minimizeWindow('vscode');
+                     toggleWindow('terminal');
+                     if (!maximizedWindows.includes('terminal')) {
+                       setMaximizedWindows(prev => [...prev, 'terminal']);
+                     }
+                   }}
+                 />
               </Box>
             </div>
           );
@@ -288,7 +396,15 @@ const RemoteDesktop = () => {
           ))}
         </Box>
 
-        <Box className="flex items-center gap-4 px-4 text-white">
+        <Box className="flex items-center gap-6 px-4 text-white">
+           <Button 
+            onClick={handleStopLab}
+            variant="contained"
+            className="!bg-red-600 hover:!bg-red-700 !text-white !text-[10px] !font-black px-4 py-1.5 rounded-lg shadow-lg shadow-red-600/20 uppercase tracking-widest transition-all"
+            startIcon={<MdPowerSettingsNew size={16} />}
+          >
+            Stop Lab
+          </Button>
            <MdWifi size={18} className="opacity-60" />
            <div className="text-right">
              <Typography className="text-[11px] font-bold">{currentTime}</Typography>

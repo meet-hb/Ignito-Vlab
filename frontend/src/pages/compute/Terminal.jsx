@@ -1,149 +1,163 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  IconButton,
-  Paper,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import {
-  MdFitScreen,
-  MdKeyboard,
-  MdOutlinePowerSettingsNew,
-  MdRefresh,
-  MdTerminal,
-} from 'react-icons/md';
-import Header from '../../components/Header';
-import { connectTerminalStream } from '../../services/ideService';
+import { Box, Typography, IconButton } from '@mui/material';
+import { MdTerminal, MdClose, MdAdd } from 'react-icons/md';
 
-const Terminal = ({ onMenuClick, hideHeader }) => {
-  const [history, setHistory] = useState([
-    'Welcome to Ignito Compute Terminal',
-    'Connecting to live output stream...',
+const Terminal = ({ session, hideHeader }) => {
+  const initialHistory = [
+    'Ignito Cloud Shell v1.0.0',
+    'Copyright (c) 2026 Ignito Labs. All rights reserved.',
     '',
+    'Connecting to container runtime...',
+    'Environment: Ubuntu 22.04.3 LTS (GNU/Linux 6.2.0-1017-aws x86_64)',
+    'Welcome, ignito-user!',
+    '',
+  ];
+
+  const [tabs, setTabs] = useState([
+    { id: Date.now(), name: 'bash', history: [...initialHistory], input: '' }
   ]);
-  const [error, setError] = useState('');
+  const [activeTabId, setActiveTabId] = useState(tabs[0].id);
+  
   const terminalRef = useRef(null);
-  const navigate = useNavigate();
+  const inputRef = useRef(null);
 
-  useEffect(() => {
-    const connection = connectTerminalStream({
-      sessionId: 'sess_12345',
-      runId: 'run_123',
-      onMessage: (message) => {
-        if (message.type === 'stdout' || message.type === 'stderr') {
-          setHistory((prev) => [...prev, message.data.trimEnd()]);
-        }
-
-        if (message.type === 'exit') {
-          setHistory((prev) => [...prev, `${message.message} (exit code ${message.exitCode})`]);
-        }
-      },
-    });
-
-    return () => {
-      connection?.close?.();
-    };
-  }, []);
+  const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
 
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
-  }, [history]);
+    inputRef.current?.focus();
+  }, [activeTab.history, activeTabId]);
 
-  const handleReset = () => {
-    setHistory([
-      'Terminal session reset.',
-      'Waiting for next run output...',
-      '',
-    ]);
+  const updateActiveTab = (updates) => {
+    setTabs(prev => prev.map(t => t.id === activeTabId ? { ...t, ...updates } : t));
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen?.();
+  const addNewTab = () => {
+    const newId = Date.now();
+    setTabs(prev => [...prev, { 
+      id: newId, 
+      name: `bash (${prev.length + 1})`, 
+      history: [...initialHistory], 
+      input: '' 
+    }]);
+    setActiveTabId(newId);
+  };
+
+  const closeTab = (e, id) => {
+    e.stopPropagation();
+    if (tabs.length === 1) return; // Don't close the last tab
+    
+    const newTabs = tabs.filter(t => t.id !== id);
+    setTabs(newTabs);
+    if (activeTabId === id) {
+      setActiveTabId(newTabs[newTabs.length - 1].id);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      const cmd = activeTab.input.trim();
+      let newHistory = [...activeTab.history];
+      
+      if (cmd) {
+        newHistory.push(`ignito@container:~$ ${cmd}`);
+        
+        // Mock responses
+        const addResponse = (msg) => {
+          newHistory.push(msg);
+          newHistory.push('');
+          updateActiveTab({ history: newHistory, input: '' });
+        };
+
+        if (cmd === 'ls') addResponse('src  public  package.json  node_modules  README.md');
+        else if (cmd === 'whoami') addResponse('ignito-user');
+        else if (cmd === 'clear') updateActiveTab({ history: [`ignito@container:~$ `], input: '' });
+        else if (cmd === 'help') addResponse('Available commands: ls, whoami, clear, help, date, echo');
+        else if (cmd === 'date') addResponse(new Date().toString());
+        else if (cmd.startsWith('echo ')) addResponse(cmd.substring(5));
+        else addResponse(`bash: ${cmd}: command not found`);
+      } else {
+        newHistory.push('ignito@container:~$ ');
+        updateActiveTab({ history: newHistory, input: '' });
+      }
     }
   };
 
   return (
-    <Box className="flex-1 flex flex-col min-h-0 bg-slate-900 app-shell">
-      {!hideHeader && <Header onMenuClick={onMenuClick} title="SSH Console" />}
-
-      <main className="flex-1 flex flex-col p-4 md:p-6 lg:p-10">
-        <Box className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col">
-          {error && (
-            <Alert severity="warning" className="mb-4 rounded-xl">
-              {error}
-            </Alert>
-          )}
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <Box className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-lg shadow-red-500/20">
-                <MdTerminal size={22} />
-              </Box>
-              <div>
-                <Typography className="text-white font-black tracking-tight leading-none mb-1">Live Container Terminal</Typography>
-                <Typography className="text-slate-500 text-[10px] font-black uppercase tracking-widest">WebSocket Stream | session sess_12345</Typography>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Tooltip title="Reset Session">
-                <IconButton onClick={handleReset} className="bg-slate-800 text-slate-400 hover:bg-slate-700 rounded-xl p-2.5">
-                  <MdRefresh size={18} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Back to Instances">
-                <IconButton onClick={() => navigate('/admin/compute/instances')} className="bg-slate-800 text-red-500 hover:bg-red-500/10 rounded-xl p-2.5">
-                  <MdOutlinePowerSettingsNew size={18} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Fullscreen">
-                <IconButton onClick={toggleFullscreen} className="bg-red-600 text-white hover:bg-red-700 rounded-xl p-2.5 shadow-lg shadow-red-500/20">
-                  <MdFitScreen size={18} />
-                </IconButton>
-              </Tooltip>
-            </div>
-          </div>
-
-          <Paper
-            elevation={0}
-            className="flex-1 bg-[#2e3440] rounded-[32px] border border-slate-800 p-6 md:p-8 shadow-2xl flex flex-col relative overflow-hidden"
-          >
-            <div className="absolute top-0 left-0 right-0 h-10 bg-slate-800/50 backdrop-blur-md flex items-center px-6 gap-2 border-b border-slate-700/50">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
-              <Typography className="text-[10px] font-mono text-slate-500 ml-4">ws://terminal-stream | 80x24</Typography>
-            </div>
-
-            <Box
-              ref={terminalRef}
-              className="flex-1 mt-6 overflow-y-auto font-mono text-[13px] leading-relaxed custom-scrollbar-dark"
+    <Box className="h-full w-full bg-[#0c0c0c] flex flex-col font-mono text-[13px]">
+      {/* Terminal Header/Tab area */}
+      {!hideHeader && (
+        <Box className="h-9 bg-[#1e1e1e] flex items-center px-2 border-b border-black/40 shrink-0 overflow-x-auto no-scrollbar">
+          {tabs.map((tab) => (
+            <Box 
+              key={tab.id}
+              onClick={() => setActiveTabId(tab.id)}
+              className={`flex items-center gap-2 px-3 h-full cursor-pointer transition-all border-r border-black/20 min-w-[120px] max-w-[200px] ${
+                activeTabId === tab.id 
+                ? 'bg-[#0c0c0c] border-t-2 border-t-red-500 text-slate-200' 
+                : 'hover:bg-[#2a2d2e] text-slate-500'
+              }`}
             >
-              {history.map((line, index) => (
-                <div key={`${line}-${index}`} className="whitespace-pre-wrap text-[#d8dee9]">
-                  {line}
-                </div>
-              ))}
+              <MdTerminal size={14} className={activeTabId === tab.id ? 'text-emerald-500' : 'text-slate-600'} />
+              <Typography className="text-[11px] font-bold truncate flex-1">{tab.name}</Typography>
+              {tabs.length > 1 && (
+                <MdClose 
+                  size={14} 
+                  className="hover:bg-white/10 rounded p-0.5 text-slate-500 hover:text-white"
+                  onClick={(e) => closeTab(e, tab.id)}
+                />
+              )}
             </Box>
-
-            <div className="mt-6 pt-4 border-t border-slate-800/50 flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1"><MdKeyboard size={12} /> UTF-8</span>
-                <span className="flex items-center gap-1"><MdTerminal size={12} /> websocket</span>
-              </div>
-              <div>STREAM: ACTIVE</div>
-            </div>
-          </Paper>
+          ))}
+          
+          <Box 
+            onClick={addNewTab}
+            className="flex items-center gap-1 px-3 h-full cursor-pointer text-slate-500 hover:text-slate-300 hover:bg-[#2a2d2e] transition-all"
+          >
+            <MdAdd size={16} />
+            <Typography className="text-[10px] font-bold whitespace-nowrap">New Terminal</Typography>
+          </Box>
         </Box>
-      </main>
+      )}
+
+      {/* Terminal Content */}
+      <Box 
+        ref={terminalRef}
+        onClick={() => inputRef.current?.focus()}
+        className="flex-1 overflow-y-auto p-4 custom-scrollbar-dark selection:bg-red-500/30"
+      >
+        {activeTab.history.map((line, i) => (
+          <div key={i} className="text-[#cccccc] mb-0.5 whitespace-pre-wrap break-all leading-relaxed">
+            {line.startsWith('ignito@container:~$') ? (
+              <>
+                <span className="text-emerald-500 font-bold">ignito@container</span>
+                <span className="text-slate-400">:</span>
+                <span className="text-blue-400 font-bold">~</span>
+                <span className="text-slate-400">$</span>
+                <span className="ml-2">{line.replace('ignito@container:~$ ', '')}</span>
+              </>
+            ) : line}
+          </div>
+        ))}
+        
+        <Box className="flex items-center gap-2">
+          <span className="text-emerald-500 font-bold">ignito@container</span>
+          <span className="text-slate-400">:</span>
+          <span className="text-blue-400 font-bold">~</span>
+          <span className="text-slate-400">$</span>
+          <input
+            ref={inputRef}
+            type="text"
+            value={activeTab.input}
+            onChange={(e) => updateActiveTab({ input: e.target.value })}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            className="flex-1 bg-transparent border-none outline-none text-[#cccccc] font-mono text-[13px] p-0 m-0"
+          />
+        </Box>
+      </Box>
     </Box>
   );
 };

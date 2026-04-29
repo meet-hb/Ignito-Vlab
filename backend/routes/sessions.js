@@ -169,11 +169,10 @@ router.get('/user/:userId', (req, res) => {
   const { userId } = req.params;
   const { labId } = req.query;
   const sessionId = Object.keys(SESSIONS).find(sid => {
-    let isMatch = SESSIONS[sid].userId === userId && SESSIONS[sid].status !== 'failed';
-    if (labId) {
-      isMatch = isMatch && SESSIONS[sid].labId === labId;
-    }
-    return isMatch;
+    const s = SESSIONS[sid];
+    return s.userId === userId && 
+           (s.status === 'running' || s.status === 'starting') &&
+           (!labId || s.labId === labId);
   });
 
   if (sessionId) {

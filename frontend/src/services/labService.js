@@ -24,7 +24,10 @@ export async function fetchLabSessionStatus(sessionId) {
 }
 
 export async function fetchUserActiveSession(userId, labId) {
-  const url = labId ? `/lab-sessions/user/${userId}?labId=${labId}` : `/lab-sessions/user/${userId}`;
+  const t = Date.now();
+  const url = labId 
+    ? `/lab-sessions/user/${userId}?labId=${labId}&t=${t}` 
+    : `/lab-sessions/user/${userId}?t=${t}`;
   return apiRequest(url);
 }
 

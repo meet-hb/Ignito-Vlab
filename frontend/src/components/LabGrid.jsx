@@ -3,12 +3,53 @@ import { Box, Card, Typography, Button } from '@mui/material';
 import { motion } from 'motion/react';
 import { MdChevronRight, MdTerminal, MdAccessTime, MdStars } from 'react-icons/md';
 import { useLabStore } from '../store/labStore';
+import { useAuthStore } from '../store/authStore';
 import { useNavigate, Link } from 'react-router-dom';
+import { fetchUserActiveSession, stopLabSession } from '../services/labService';
 
 const LabGrid = ({ onLabClick, labs: labsProp }) => {
   const navigate = useNavigate();
   const { labs: storeLabs } = useLabStore();
+  const { user } = useAuthStore();
   const labs = labsProp || storeLabs;
+  const [activeSessions, setActiveSessions] = React.useState({});
+  const [isStopping, setIsStopping] = React.useState(null);
+
+  const checkSessions = async () => {
+    if (!user) return;
+    try {
+      const response = await fetchUserActiveSession(user.email);
+      if (response.success && response.session) {
+        setActiveSessions({ [response.session.labId]: response.session });
+      } else {
+        setActiveSessions({});
+      }
+    } catch (err) {
+      console.error('Session sync error:', err);
+    }
+  };
+
+  React.useEffect(() => {
+    checkSessions();
+    const interval = setInterval(checkSessions, 3000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const handleStopLab = async (sessionId, labId) => {
+    if (!window.confirm('Are you sure you want to stop this lab session? All unsaved work will be lost.')) return;
+    setIsStopping(labId);
+    try {
+      await stopLabSession(sessionId);
+    } catch (err) {
+      console.error('Failed to stop lab:', err);
+    } finally {
+      setActiveSessions({});
+      setIsStopping(null);
+      await checkSessions();
+    }
+  };
+
+  const isLabActive = (labId) => !!activeSessions[labId];
 
   return (
     <Box className="flex flex-col gap-4 font-sans">
@@ -76,22 +117,33 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
 
               {/* Action Section */}
               <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
-                <Link 
-                  to={`/admin/compute/rdp?labId=${lab.id}&app=vscode`}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ textDecoration: 'none' }}
-                >
+                {isLabActive(lab.id) ? (
                   <Button 
                     variant="contained" 
-                    className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-8 py-3 font-black text-xs tracking-widest transition-all group-hover:shadow-lg group-hover:shadow-red-500/20 uppercase"
-                    endIcon={<MdChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />}
+                    onClick={(e) => { e.stopPropagation(); handleStopLab(activeSessions[lab.id].sessionId, lab.id); }}
+                    disabled={isStopping === lab.id}
+                    className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-8 py-3 font-black text-xs tracking-widest transition-all shadow-lg shadow-red-500/20 uppercase"
                   >
-                    Start Lab
+                    {isStopping === lab.id ? 'Stopping...' : 'Stop Lab'}
                   </Button>
-                </Link>
+                ) : (
+                  <Link 
+                    to={`/admin/compute/rdp?labId=${lab.id}&app=vscode`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <Button 
+                      variant="contained" 
+                      className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-8 py-3 font-black text-xs tracking-widest transition-all group-hover:shadow-lg group-hover:shadow-red-500/20 uppercase"
+                      endIcon={<MdChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />}
+                    >
+                      Start Lab
+                    </Button>
+                  </Link>
+                )}
                 <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  System Online
+                  <span className={`w-2 h-2 rounded-full ${isLabActive(lab.id) ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                  {isLabActive(lab.id) ? 'Session Active' : 'System Online'}
                 </div>
               </div>
             </div>
