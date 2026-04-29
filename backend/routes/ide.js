@@ -18,7 +18,7 @@ const getSession = (req) => {
 router.get('/', (req, res) => {
   res.json({
     success: true,
-    files: FILES.map(({ content, language, ...file }) => file)
+    files: FILES.map(({ content, ...file }) => file)
   });
 });
 
@@ -97,7 +97,7 @@ router.post('/run', async (req, res) => {
       }
 
       const cmd = commands[index];
-      exec(`${cmd} "${tempFile}"`, { timeout: 10000 }, (error, stdout, stderr) => {
+      exec(`${cmd} "${tempFile}"`, { timeout: 30000 }, (error, stdout, stderr) => {
         // If command not found, try next one
         if (error && (error.message.includes('not recognized') || error.message.includes('not found') || error.code === 127 || error.code === 'ENOENT')) {
           return tryExecute(index + 1);
@@ -109,7 +109,7 @@ router.post('/run', async (req, res) => {
         res.json({
           success: true,
           output: stdout,
-          error: stderr || (error ? (error.killed ? "Execution timed out (10s)" : error.message) : null),
+          error: stderr || (error ? (error.killed ? "Execution timed out (30s)" : error.message) : null),
           runId: "run_" + Math.random().toString(36).substr(2, 9)
         });
       });
@@ -128,7 +128,7 @@ router.post('/run', async (req, res) => {
     const javaFile = path.join(tempDir, `${className}.java`);
     fs.writeFileSync(javaFile, file.content);
 
-    exec(`javac "${javaFile}" && java -cp "${tempDir}" ${className}`, { timeout: 15000 }, (error, stdout, stderr) => {
+    exec(`javac "${javaFile}" && java -cp "${tempDir}" ${className}`, { timeout: 60000 }, (error, stdout, stderr) => {
       // Clean up
       try { 
         if (fs.existsSync(tempDir)) {
@@ -140,7 +140,7 @@ router.post('/run', async (req, res) => {
       res.json({
         success: true,
         output: stdout,
-        error: stderr || (error ? (error.killed ? "Execution timed out (15s)" : error.message) : null),
+        error: stderr || (error ? (error.killed ? "Execution timed out (60s)" : error.message) : null),
         runId: "run_" + Math.random().toString(36).substr(2, 9)
       });
     });

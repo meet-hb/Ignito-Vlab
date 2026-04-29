@@ -163,6 +163,13 @@ const CloudEditor = ({ onMenuClick, session: propSession }) => {
 
     if (codeToRender) {
       setWebPreviewCode(codeToRender);
+      
+      // If it's a pure web file (HTML/CSS), we don't need to call the backend run
+      // because the preview is already rendered locally in the iframe.
+      if (ext === 'html' || ext === 'css') {
+        setIsRunning(false);
+        return;
+      }
     } else {
       // Show a subtle terminal-style starting message
       setWebPreviewCode(`<html><body style="background: #0f172a; color: #38bdf8; font-family: monospace; padding: 30px; margin: 0;">[System] Initializing execution...<br/>[System] Running ${activeFile.name}...</body></html>`);
@@ -176,7 +183,7 @@ const CloudEditor = ({ onMenuClick, session: propSession }) => {
     try {
       const response = await runFile({
         path: activeFile.path,
-        language: activeFile.language,
+        language: activeFile.language || detectLanguage(activeFile.name),
         sessionId: sessionId,
       });
 
@@ -395,7 +402,7 @@ const CloudEditor = ({ onMenuClick, session: propSession }) => {
                 variant="contained"
                 size="small"
                 disabled={isRunning}
-                startIcon={<MdPlayArrow size={16} />}
+                startIcon={isRunning ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <MdPlayArrow size={16} />}
                 className="!text-[10px] !font-black px-4 rounded-lg !bg-red-600 shadow-lg shadow-red-500/20"
               >
                 {isRunning ? 'Running...' : 'Run'}
@@ -504,11 +511,6 @@ const CloudEditor = ({ onMenuClick, session: propSession }) => {
                     <MdLanguage size={80} className="opacity-20 mb-4" />
                     <Typography className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Preview Area</Typography>
                     <Typography className="text-[10px] text-slate-400 mt-2">Write HTML and click Run</Typography>
-                  </Box>
-                )}
-                {isRunning && (
-                  <Box className="absolute inset-0 bg-white/50 flex items-center justify-center">
-                    <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
                   </Box>
                 )}
               </Box>
