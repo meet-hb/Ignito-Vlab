@@ -23,8 +23,9 @@ export async function fetchLabSessionStatus(sessionId) {
   return apiRequest(`/lab-sessions/${sessionId}`);
 }
 
-export async function fetchUserActiveSession(userId) {
-  return apiRequest(`/lab-sessions/user/${userId}`);
+export async function fetchUserActiveSession(userId, labId) {
+  const url = labId ? `/lab-sessions/user/${userId}?labId=${labId}` : `/lab-sessions/user/${userId}`;
+  return apiRequest(url);
 }
 
 export async function stopLabSession(sessionId) {

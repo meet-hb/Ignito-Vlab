@@ -1,9 +1,9 @@
 import express from 'express';
-import {
-  ECSClient,
-  ListTasksCommand,
+import { 
+  ECSClient, 
+  ListTasksCommand, 
   DescribeTasksCommand,
-  RunTaskCommand
+  RunTaskCommand 
 } from "@aws-sdk/client-ecs";
 import dotenv from 'dotenv';
 
@@ -19,19 +19,12 @@ const ecsClient = new ECSClient({
   },
 });
 
-const MOCK_INSTANCES = [
-  { id: 'i-01', name: 'web-server-01', status: 'Running', type: 't3.medium', region: 'us-east-1' },
-  { id: 'i-02', name: 'db-primary', status: 'Stopped', type: 't3.large', region: 'us-east-1' }
-];
-
 const CATALOG = {
   regions: [
-    { id: "ap-south-1", name: "Asia Pacific (Mumbai)", code: "ap-south-1" },
-    { id: "us-east", name: "US East (N. Virginia)", code: "us-east-1" }
+    { id: "ap-south-1", name: "Asia Pacific (Mumbai)", code: "ap-south-1" }
   ],
   images: [
-    { id: "vlab-base", name: "Standard VLab Environment", badge: "Fargate" },
-    { id: "ubuntu", name: "Ubuntu 22.04 LTS", badge: "Linux" }
+    { id: "vlab-base", name: "Standard VLab Environment", badge: "Fargate" }
   ],
   plans: [
     { id: "fargate-1", price: "$0.04/hr", ram: "0.5 GB", cpu: "0.25 vCPU" },
@@ -48,7 +41,7 @@ router.get('/instances', async (req, res) => {
     }));
 
     if (!listTasks.taskArns || listTasks.taskArns.length === 0) {
-      return res.json(MOCK_INSTANCES); // Fallback to mocks if no tasks found
+      return res.json([]);
     }
 
     const describeTasks = await ecsClient.send(new DescribeTasksCommand({
@@ -65,10 +58,10 @@ router.get('/instances', async (req, res) => {
       createdAt: t.createdAt
     }));
 
-    res.json([...MOCK_INSTANCES, ...tasks]);
+    res.json(tasks);
   } catch (error) {
     console.error("Error listing Fargate tasks:", error);
-    res.json(MOCK_INSTANCES); // Fallback to mocks on error
+    res.status(500).json({ success: false, message: "Failed to fetch compute resources" });
   }
 });
 
@@ -80,18 +73,7 @@ router.get('/catalog', (req, res) => {
 // POST /api/compute/instances
 router.post('/instances', async (req, res) => {
   const { taskDefinition } = req.body;
-
-  if (!process.env.ECS_CLUSTER) {
-    // Fallback logic for mock instance creation
-    const newInstance = {
-      ...req.body,
-      id: `i-${Math.random().toString(16).slice(2, 10)}`,
-      status: 'Pending'
-    };
-    MOCK_INSTANCES.push(newInstance);
-    return res.json({ success: true, instanceId: newInstance.id, request: req.body });
-  }
-
+  
   try {
     const command = new RunTaskCommand({
       cluster: process.env.ECS_CLUSTER,
@@ -109,8 +91,8 @@ router.post('/instances', async (req, res) => {
     const response = await ecsClient.send(command);
     const task = response.tasks[0];
 
-    res.json({
-      success: true,
+    res.json({ 
+      success: true, 
       instanceId: task.taskArn.split('/').pop(),
       status: 'Pending',
       message: 'Fargate task provisioning started'
