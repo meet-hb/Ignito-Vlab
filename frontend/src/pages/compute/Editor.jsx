@@ -62,7 +62,7 @@ const detectLanguage = (fileName) => {
   return 'text';
 };
 
-const CloudEditor = ({ onMenuClick, session: propSession }) => {
+const CloudEditor = ({ onMenuClick, session: propSession, hideHeader }) => {
   const navigate = useNavigate();
   const editorRef = useRef(null);
   const [files, setFiles] = useState([]);
@@ -298,7 +298,7 @@ const CloudEditor = ({ onMenuClick, session: propSession }) => {
 
   return (
     <Box className="flex-1 flex flex-col min-h-0 bg-[#181818] h-full overflow-hidden">
-      <Header onMenuClick={onMenuClick} title="Cloud IDE" />
+      {!hideHeader && <Header onMenuClick={onMenuClick} title="Cloud IDE" />}
 
       <Box className="flex-1 flex min-h-0">
         <Box className="hidden xl:flex w-[260px] bg-[#252526] border-r border-[#333] flex-col shrink-0">

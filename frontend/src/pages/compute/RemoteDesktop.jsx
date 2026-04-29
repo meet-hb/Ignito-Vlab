@@ -207,6 +207,7 @@ const RemoteDesktop = () => {
         backgroundPosition: 'center'
       }}
     >
+
       {/* Desktop Icons */}
       <Box className="p-6 flex flex-col gap-6">
         {appsConfig.map(app => (
@@ -249,7 +250,7 @@ const RemoteDesktop = () => {
                 </div>
               </Box>
               <Box className="flex-1 overflow-hidden">
-                 <win.component onMenuClick={() => {}} session={session} />
+                 <win.component onMenuClick={() => {}} session={session} hideHeader={true} />
               </Box>
             </div>
           );

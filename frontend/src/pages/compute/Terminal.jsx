@@ -18,7 +18,7 @@ import {
 import Header from '../../components/Header';
 import { connectTerminalStream } from '../../services/ideService';
 
-const Terminal = ({ onMenuClick }) => {
+const Terminal = ({ onMenuClick, hideHeader }) => {
   const [history, setHistory] = useState([
     'Welcome to Ignito Compute Terminal',
     'Connecting to live output stream...',
@@ -72,7 +72,7 @@ const Terminal = ({ onMenuClick }) => {
 
   return (
     <Box className="flex-1 flex flex-col min-h-0 bg-slate-900 app-shell">
-      <Header onMenuClick={onMenuClick} title="SSH Console" />
+      {!hideHeader && <Header onMenuClick={onMenuClick} title="SSH Console" />}
 
       <main className="flex-1 flex flex-col p-4 md:p-6 lg:p-10">
         <Box className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col">
