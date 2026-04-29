@@ -90,12 +90,15 @@ function AuthenticatedApp({ isSidebarOpen, isCollapsed, toggleSidebar, setIsSide
           <Route path="/admin/policies/new" element={<PageWrapper><CreatePolicy onMenuClick={toggleSidebar} /></PageWrapper>} />
           <Route path="/admin/labs/view/:id" element={<PageWrapper><ViewLab onMenuClick={toggleSidebar} /></PageWrapper>} />
           
-          {/* Compute Routes */}
-          <Route path="/admin/compute" element={<Navigate to="/admin/compute/instances" replace />} />
+          {/* Compute Routes - Hidden for now */}
+          {/* <Route path="/admin/compute" element={<Navigate to="/admin/compute/instances" replace />} />
           <Route path="/admin/compute/instances" element={<PageWrapper><Instances onMenuClick={toggleSidebar} /></PageWrapper>} />
           <Route path="/admin/compute/new" element={<PageWrapper><CreateInstance onMenuClick={toggleSidebar} /></PageWrapper>} />
           <Route path="/admin/compute/terminals" element={<PageWrapper><Terminal onMenuClick={toggleSidebar} /></PageWrapper>} />
-          <Route path="/admin/compute/ide" element={<PageWrapper><CloudEditor onMenuClick={toggleSidebar} /></PageWrapper>} />
+          <Route path="/admin/compute/ide" element={<PageWrapper><CloudEditor onMenuClick={toggleSidebar} /></PageWrapper>} /> */}
+          
+          {/* Redirect hidden compute routes to dashboard */}
+          <Route path="/admin/compute/*" element={<Navigate to="/" replace />} />
 
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />

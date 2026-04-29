@@ -7,7 +7,11 @@ import {
   Paper,
   Avatar,
   Divider,
-  Button
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import { 
   MdClose, 
@@ -20,7 +24,8 @@ import {
   MdPowerSettingsNew,
   MdWifi,
   MdVolumeUp,
-  MdSearch
+  MdSearch,
+  MdWarning
 } from 'react-icons/md';
 import { VscCode } from 'react-icons/vsc';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -64,6 +69,8 @@ const RemoteDesktop = () => {
   const [error, setError] = useState('');
 
   const initStartedRef = useRef(false);
+  const [showStopModal, setShowStopModal] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -149,8 +156,7 @@ const RemoteDesktop = () => {
   };
 
   const handleStopLab = async () => {
-    if (!window.confirm('Are you sure you want to stop this lab session? All unsaved work will be lost.')) return;
-    
+    setIsStopping(true);
     try {
       if (session?.sessionId) {
         await stopLabSession(session.sessionId);
@@ -158,7 +164,10 @@ const RemoteDesktop = () => {
       navigate('/');
     } catch (err) {
       console.error('Failed to stop lab:', err);
-      navigate('/'); // Still navigate back to be safe
+      navigate('/'); 
+    } finally {
+      setIsStopping(false);
+      setShowStopModal(false);
     }
   };
 
@@ -283,13 +292,6 @@ const RemoteDesktop = () => {
                 </Typography>
               </div>
             </Box>
-
-            {/* Hint / Tip */}
-            <Box className="mt-8 p-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
-              <Typography className="text-slate-500 text-[10px] leading-relaxed italic">
-                Tip: Use the sidebar terminal for faster CLI operations while the editor is loading complex project structures.
-              </Typography>
-            </Box>
           </div>
         </Box>
       </Box>
@@ -398,7 +400,7 @@ const RemoteDesktop = () => {
 
         <Box className="flex items-center gap-6 px-4 text-white">
            <Button 
-            onClick={handleStopLab}
+            onClick={() => setShowStopModal(true)}
             variant="contained"
             className="!bg-red-600 hover:!bg-red-700 !text-white !text-[10px] !font-black px-4 py-1.5 rounded-lg shadow-lg shadow-red-600/20 uppercase tracking-widest transition-all"
             startIcon={<MdPowerSettingsNew size={16} />}
@@ -427,6 +429,42 @@ const RemoteDesktop = () => {
            </Box>
         </Box>
       )}
+      {/* Stop Lab Confirmation Modal */}
+      <Dialog 
+        open={showStopModal} 
+        onClose={() => !isStopping && setShowStopModal(false)}
+        PaperProps={{
+          className: "bg-[#1e1e1e] border border-white/10 rounded-2xl p-2",
+          style: { backgroundColor: '#1e1e1e', borderRadius: '20px' }
+        }}
+      >
+        <Box className="p-4 flex flex-col items-center gap-4 text-center">
+          <Box className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center text-red-500 mb-2">
+            <MdWarning size={32} />
+          </Box>
+          <div className="space-y-1">
+            <Typography className="text-white text-xl font-black uppercase tracking-tighter">Stop Lab Session?</Typography>
+            <Typography className="text-slate-400 text-sm">Are you sure you want to stop this lab? All unsaved work will be permanently lost.</Typography>
+          </div>
+          <Box className="flex gap-3 w-full mt-4">
+            <Button 
+              onClick={() => setShowStopModal(false)}
+              disabled={isStopping}
+              className="flex-1 !py-3 !rounded-xl !text-slate-400 !bg-white/5 hover:!bg-white/10 !font-black !text-[11px] uppercase tracking-widest"
+            >
+              No, Keep Working
+            </Button>
+            <Button 
+              onClick={handleStopLab}
+              disabled={isStopping}
+              variant="contained"
+              className="flex-1 !py-3 !rounded-xl !bg-red-600 hover:!bg-red-700 !text-white !font-black !text-[11px] uppercase tracking-widest shadow-xl shadow-red-600/20"
+            >
+              {isStopping ? 'Stopping...' : 'Yes, Stop Lab'}
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
     </Box>
   );
 };

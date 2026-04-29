@@ -1,7 +1,22 @@
 import React from 'react';
-import { Box, Card, Typography, Button } from '@mui/material';
+import { 
+  Box, 
+  Card, 
+  Typography, 
+  Button, 
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
 import { motion } from 'motion/react';
-import { MdChevronRight, MdTerminal, MdAccessTime, MdStars } from 'react-icons/md';
+import { 
+  MdChevronRight, 
+  MdTerminal, 
+  MdAccessTime, 
+  MdStars, 
+  MdWarning 
+} from 'react-icons/md';
 import { useLabStore } from '../store/labStore';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate, Link } from 'react-router-dom';
@@ -14,6 +29,8 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
   const labs = labsProp || storeLabs;
   const [activeSessions, setActiveSessions] = React.useState({});
   const [isStopping, setIsStopping] = React.useState(null);
+  const [showStopModal, setShowStopModal] = React.useState(false);
+  const [pendingStop, setPendingStop] = React.useState(null); // { sessionId, labId }
 
   const checkSessions = async () => {
     if (!user) return;
@@ -35,9 +52,12 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
     return () => clearInterval(interval);
   }, [user]);
 
-  const handleStopLab = async (sessionId, labId) => {
-    if (!window.confirm('Are you sure you want to stop this lab session? All unsaved work will be lost.')) return;
+  const handleStopLab = async () => {
+    if (!pendingStop) return;
+    const { sessionId, labId } = pendingStop;
+    
     setIsStopping(labId);
+    setShowStopModal(false);
     try {
       await stopLabSession(sessionId);
     } catch (err) {
@@ -45,6 +65,7 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
     } finally {
       setActiveSessions({});
       setIsStopping(null);
+      setPendingStop(null);
       await checkSessions();
     }
   };
@@ -52,7 +73,8 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
   const isLabActive = (labId) => !!activeSessions[labId];
 
   return (
-    <Box className="flex flex-col gap-4 font-sans">
+    <>
+      <Box className="flex flex-col gap-4 font-sans">
       {labs.map((lab, idx) => (
         <motion.div
           key={lab.id}
@@ -120,7 +142,11 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
                 {isLabActive(lab.id) ? (
                   <Button 
                     variant="contained" 
-                    onClick={(e) => { e.stopPropagation(); handleStopLab(activeSessions[lab.id].sessionId, lab.id); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setPendingStop({ sessionId: activeSessions[lab.id].sessionId, labId: lab.id });
+                      setShowStopModal(true);
+                    }}
                     disabled={isStopping === lab.id}
                     className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-8 py-3 font-black text-xs tracking-widest transition-all shadow-lg shadow-red-500/20 uppercase"
                   >
@@ -151,6 +177,44 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
         </motion.div>
       ))}
     </Box>
+      
+    {/* Stop Lab Confirmation Modal */}
+    <Dialog 
+      open={showStopModal} 
+      onClose={() => !isStopping && setShowStopModal(false)}
+      PaperProps={{
+        className: "bg-[#1e1e1e] border border-white/10 rounded-2xl p-2",
+        style: { backgroundColor: '#1e1e1e', borderRadius: '20px', color: 'white' }
+      }}
+    >
+      <Box className="p-6 flex flex-col items-center gap-4 text-center max-w-sm">
+        <Box className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center text-red-500 mb-2">
+          <MdWarning size={32} />
+        </Box>
+        <div className="space-y-1">
+          <Typography className="text-white text-xl font-black uppercase tracking-tighter">Stop Lab Session?</Typography>
+          <Typography className="text-slate-400 text-sm">Are you sure you want to stop this lab? All unsaved work will be permanently lost.</Typography>
+        </div>
+        <Box className="flex gap-3 w-full mt-4">
+          <Button 
+            onClick={() => setShowStopModal(false)}
+            disabled={!!isStopping}
+            className="flex-1 !py-3 !rounded-xl !text-slate-400 !bg-white/5 hover:!bg-white/10 !font-black !text-[11px] uppercase tracking-widest"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleStopLab}
+            disabled={!!isStopping}
+            variant="contained"
+            className="flex-1 !py-3 !rounded-xl !bg-red-600 hover:!bg-red-700 !text-white !font-black !text-[11px] uppercase tracking-widest shadow-xl shadow-red-600/20"
+          >
+            Yes, Stop
+          </Button>
+        </Box>
+      </Box>
+    </Dialog>
+  </>
   );
 };
 
