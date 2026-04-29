@@ -333,7 +333,7 @@ const RemoteDesktop = () => {
             <div
               key={win.id}
               onMouseDown={() => setActiveWindow(win.id)}
-              className={`absolute bg-[#1e1e1e] shadow-2xl border border-white/10 overflow-hidden flex flex-col pointer-events-auto transition-all duration-300 ${isMaximized ? 'inset-0 bottom-14' : 'inset-10 rounded-2xl'}`}
+              className={`absolute bg-[#1e1e1e] shadow-2xl border border-white/10 overflow-hidden flex flex-col pointer-events-auto transition-all duration-300 ${isMaximized ? 'inset-0 bottom-0' : 'inset-10 rounded-2xl'}`}
               style={{ zIndex: activeWindow === win.id ? 100 : 10 + index }}
             >
               <Box className="h-10 bg-[#252526] flex items-center justify-between px-4">
@@ -342,9 +342,20 @@ const RemoteDesktop = () => {
                   <Typography className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{win.title}</Typography>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={() => setShowStopModal(true)}
+                    variant="contained"
+                    size="small"
+                    className="!bg-red-600 hover:!bg-red-700 !text-white !text-[9px] !font-black h-6 px-3 rounded-md shadow-lg shadow-red-600/20 uppercase tracking-widest transition-all mr-4"
+                    startIcon={<MdPowerSettingsNew size={14} />}
+                  >
+                    Stop Lab
+                  </Button>
                   <IconButton onClick={() => minimizeWindow(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-white/10"><MdMinimize size={16} /></IconButton>
                   <IconButton onClick={() => toggleMaximize(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-white/10"><MdCropSquare size={16} /></IconButton>
-                  <IconButton onClick={() => closeWindow(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-red-600 hover:text-white"><MdClose size={16} /></IconButton>
+                  <IconButton onClick={() => navigate('/')} size="small" sx={{ color: 'white' }} className="hover:bg-red-600 hover:text-white transition-colors">
+                    <MdClose size={16} />
+                  </IconButton>
                 </div>
               </Box>
               <Box className="flex-1 overflow-hidden">
@@ -367,53 +378,7 @@ const RemoteDesktop = () => {
         })}
       </div>
 
-      {/* Taskbar */}
-      <Box className="absolute bottom-0 left-0 right-0 h-14 bg-black/60 backdrop-blur-2xl border-t border-white/10 flex items-center justify-between px-2 z-[600]">
-        <Box className="flex items-center gap-1">
-          <IconButton 
-            onClick={() => setShowStartMenu(!showStartMenu)}
-            className={`w-10 h-10 rounded-xl ${showStartMenu ? 'bg-white/20' : 'hover:bg-white/10'}`}
-          >
-             <Box className="w-5 h-5 grid grid-cols-2 gap-0.5">
-                <div className="bg-red-500 rounded-sm" /><div className="bg-blue-500 rounded-sm" />
-                <div className="bg-emerald-500 rounded-sm" /><div className="bg-yellow-500 rounded-sm" />
-             </Box>
-          </IconButton>
-          
-          <IconButton className="text-white hover:bg-white/10 rounded-xl w-10 h-10"><MdSearch size={22} /></IconButton>
-          <Divider orientation="vertical" className="h-6 mx-2 !border-white/10" />
 
-          {openWindows.map(win => (
-            <Box 
-              key={win.id}
-              onClick={() => {
-                if (minimizedWindows.includes(win.id)) setMinimizedWindows(minimizedWindows.filter(id => id !== win.id));
-                setActiveWindow(win.id);
-              }}
-              className={`w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer relative ${activeWindow === win.id ? 'bg-white/20' : 'hover:bg-white/10'} ${minimizedWindows.includes(win.id) ? 'opacity-50' : ''}`}
-            >
-              {getAppIcon(win.icon, 22)}
-              {activeWindow === win.id && !minimizedWindows.includes(win.id) && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-red-600 rounded-full" />}
-            </Box>
-          ))}
-        </Box>
-
-        <Box className="flex items-center gap-6 px-4 text-white">
-           <Button 
-            onClick={() => setShowStopModal(true)}
-            variant="contained"
-            className="!bg-red-600 hover:!bg-red-700 !text-white !text-[10px] !font-black px-4 py-1.5 rounded-lg shadow-lg shadow-red-600/20 uppercase tracking-widest transition-all"
-            startIcon={<MdPowerSettingsNew size={16} />}
-          >
-            Stop Lab
-          </Button>
-           <MdWifi size={18} className="opacity-60" />
-           <div className="text-right">
-             <Typography className="text-[11px] font-bold">{currentTime}</Typography>
-             <Typography className="text-[9px] opacity-40">25/04/2026</Typography>
-           </div>
-        </Box>
-      </Box>
 
       {/* Start Menu Simulation */}
       {showStartMenu && (

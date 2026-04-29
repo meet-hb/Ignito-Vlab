@@ -140,18 +140,32 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
               {/* Action Section */}
               <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
                 {isLabActive(lab.id) ? (
-                  <Button 
-                    variant="contained" 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setPendingStop({ sessionId: activeSessions[lab.id].sessionId, labId: lab.id });
-                      setShowStopModal(true);
-                    }}
-                    disabled={isStopping === lab.id}
-                    className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-8 py-3 font-black text-xs tracking-widest transition-all shadow-lg shadow-red-500/20 uppercase"
-                  >
-                    {isStopping === lab.id ? 'Stopping...' : 'Stop Lab'}
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Link 
+                      to={`/admin/compute/rdp?labId=${lab.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <Button 
+                        variant="contained" 
+                        className="!bg-emerald-600 hover:!bg-emerald-700 text-white rounded-xl px-6 py-3 font-black text-xs tracking-widest transition-all shadow-lg shadow-emerald-500/20 uppercase"
+                      >
+                        Go to Lab
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="contained" 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setPendingStop({ sessionId: activeSessions[lab.id].sessionId, labId: lab.id });
+                        setShowStopModal(true);
+                      }}
+                      disabled={isStopping === lab.id}
+                      className="!bg-red-600 hover:!bg-red-700 text-white rounded-xl px-6 py-3 font-black text-xs tracking-widest transition-all shadow-lg shadow-red-500/20 uppercase"
+                    >
+                      {isStopping === lab.id ? 'Stopping...' : 'Stop Lab'}
+                    </Button>
+                  </div>
                 ) : (
                   <Link 
                     to={`/admin/compute/rdp?labId=${lab.id}&app=vscode`}
