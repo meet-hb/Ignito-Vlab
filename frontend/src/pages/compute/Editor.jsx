@@ -525,7 +525,7 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
             {/* W3Schools style Web Output Side */}
             <Box 
               id="web-preview-area" 
-              className={`w-full xl:w-[450px] 2xl:w-[550px] bg-white flex flex-col shrink-0 ${activeTab === 'preview' ? 'flex' : 'hidden xl:flex'}`}
+              className={`w-full xl:w-[450px] 2xl:w-[550px] bg-white flex flex-col flex-1 xl:flex-none shrink-0 ${activeTab === 'preview' ? 'flex' : 'hidden xl:flex'}`}
             >
               <Box className="px-4 h-10 bg-[#f1f1f1] flex items-center justify-between border-b border-[#ddd] shrink-0">
                 <Typography className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
