@@ -265,12 +265,12 @@ const RemoteDesktop = () => {
           
           <div className="relative flex flex-col items-center gap-8 text-center">
             {/* Logo / Icon */}
-            <Box className="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white shadow-2xl shadow-red-600/20 rotate-3 animate-bounce">
-              <MdWifi size={40} />
+            <Box className="w-24 h-24 rounded-3xl bg-white/5 backdrop-blur-xl flex items-center justify-center border border-white/10 shadow-2xl animate-bounce">
+               <img src="/assets/logo.png" alt="Ignito Vlab" className="w-16 h-16 object-contain" />
             </Box>
 
             <div className="space-y-2">
-              <Typography className="text-white font-black text-3xl tracking-tighter uppercase">Initializing Lab</Typography>
+              <Typography className="text-white font-black text-3xl tracking-tighter uppercase">Ignito Vlab</Typography>
               <Typography className="text-slate-500 text-xs uppercase tracking-[0.3em] font-bold">Secure WebRTC Tunnel</Typography>
             </div>
 

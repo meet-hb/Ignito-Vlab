@@ -37,7 +37,7 @@ const SidebarContent = ({ isCollapsed = false }) => {
           <Box className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200">
             <img src="/assets/logo.png" alt="logo" className="w-7 h-7 object-contain" />
           </Box>
-          {!isCollapsed && <Typography className="font-black text-slate-900 tracking-tight text-[15px] truncate">Vlab HQ</Typography>}
+          {!isCollapsed && <Typography className="font-black text-slate-900 tracking-tight text-[15px] truncate">Ignito Vlab</Typography>}
         </motion.div>
       </Box>
 

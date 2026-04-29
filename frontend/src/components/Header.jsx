@@ -99,7 +99,7 @@ const Header = ({ onMenuClick, title, onBack }) => {
               <img src="/assets/logo.png" alt="VLabs" className="h-6 w-6 object-contain" />
             </div>
             <Typography variant="subtitle2" className="font-black text-slate-900 tracking-tight text-[13px] whitespace-nowrap">
-              Vlab Control
+              Ignito Vlab
             </Typography>
           </div>
 

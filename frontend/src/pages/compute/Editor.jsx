@@ -117,7 +117,53 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
   };
 
   const handleFormat = () => {
-    editorRef.current?.getAction('editor.action.formatDocument')?.run();
+    if (!editorRef.current) return;
+    
+    // Attempt 1: Use Monaco's built-in formatter
+    const action = editorRef.current.getAction('editor.action.formatDocument');
+    if (action) {
+      action.run().catch(err => {
+        console.warn('Monaco formatting failed, using fallback:', err);
+        applyFallbackFormatting();
+      });
+    } else {
+      applyFallbackFormatting();
+    }
+  };
+
+  const applyFallbackFormatting = () => {
+    if (!editorRef.current) return;
+    
+    const value = editorRef.current.getValue();
+    if (!value) return;
+
+    try {
+      const lines = value.split('\n');
+      let indentLevel = 0;
+      const tabSize = 2;
+      
+      const formattedLines = lines.map(line => {
+        let trimmed = line.trim();
+        
+        // Decrease indent for closing braces/brackets before processing line
+        if (trimmed.startsWith('}') || trimmed.startsWith(']') || trimmed.startsWith(')')) {
+          indentLevel = Math.max(0, indentLevel - 1);
+        }
+        
+        const formattedLine = ' '.repeat(indentLevel * tabSize) + trimmed;
+        
+        // Increase indent for opening braces/brackets after processing line
+        if (trimmed.endsWith('{') || trimmed.endsWith('[') || trimmed.endsWith('(') || trimmed.endsWith(':')) {
+          indentLevel++;
+        }
+        
+        return formattedLine;
+      });
+
+      editorRef.current.setValue(formattedLines.join('\n'));
+    } catch (e) {
+      console.error('Fallback formatting failed:', e);
+    }
   };
 
   const handleSave = async () => {
@@ -193,12 +239,13 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
           <html>
             <head>
               <style>
-                body { font-family: 'Consolas', 'Monaco', monospace; background: #0f172a; color: #38bdf8; padding: 30px; margin: 0; line-height: 1.6; }
-                .header { color: #f8fafc; font-family: sans-serif; border-bottom: 1px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px; display: flex; items-center; gap: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
-                .output { white-space: pre-wrap; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); color: #fff; }
+                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=Inter:wght@300;400;600;900&display=swap');
+                body { font-family: 'Outfit', sans-serif; background: #0f172a; color: #38bdf8; padding: 30px; margin: 0; line-height: 1.6; }
+                .header { color: #f8fafc; font-family: 'Outfit', sans-serif; border-bottom: 1px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px; display: flex; items-center; gap: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+                .output { font-family: 'Consolas', 'Monaco', monospace; white-space: pre-wrap; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); color: #fff; }
                 .error-header { color: #ef4444; margin-top: 30px; }
                 .error { color: #fca5a5; background: #450a0a; border-color: #7f1d1d; }
-                .label { color: #64748b; font-size: 10px; margin-bottom: 5px; display: block; }
+                .label { color: #64748b; font-size: 10px; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
               </style>
             </head>
             <body>
