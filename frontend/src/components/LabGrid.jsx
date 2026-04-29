@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Card, Typography, Button } from '@mui/material';
 import { motion } from 'motion/react';
-import { MdChevronRight, MdTerminal } from 'react-icons/md';
+import { MdChevronRight, MdTerminal, MdAccessTime, MdStars } from 'react-icons/md';
 import { useLabStore } from '../store/labStore';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -50,12 +50,34 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
                   {lab.title}
                 </Typography>
                 <Typography className="text-slate-400 text-sm mt-1 font-medium">Standard Cloud Laboratory Infrastructure</Typography>
+                
+                <div className="flex items-center gap-6 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
+                      <MdAccessTime size={16} />
+                    </div>
+                    <div>
+                      <Typography className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Duration</Typography>
+                      <Typography className="text-xs font-bold text-slate-700 mt-0.5">{lab.durationMinutes} Mins</Typography>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
+                      <MdStars size={16} />
+                    </div>
+                    <div>
+                      <Typography className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Credits</Typography>
+                      <Typography className="text-xs font-bold text-slate-700 mt-0.5">{lab.credits} Credits</Typography>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Action Section */}
               <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
                 <Link 
-                  to={`/admin/labs/view/${lab.id}`}
+                  to={`/admin/compute/rdp?labId=${lab.id}&app=vscode`}
                   onClick={(e) => e.stopPropagation()}
                   style={{ textDecoration: 'none' }}
                 >

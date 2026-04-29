@@ -1,104 +1,100 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography, Breadcrumbs, Link, Button, Alert } from '@mui/material';
-import { MdChevronRight } from 'react-icons/md';
-import { motion } from 'motion/react';
+import { Box, Typography, Alert } from '@mui/material';
+import { motion } from 'framer-motion';
+import { MdTrendingUp } from 'react-icons/md';
 
 import Header from '../components/Header';
 import LabGrid from '../components/LabGrid';
-import SubLabGrid from '../components/SubLabGrid';
 import SupportFab from '../components/SupportFab';
 
 import { useLabStore } from '../store/labStore';
 
 export default function Dashboard({ onMenuClick }) {
-  const [selectedLab, setSelectedLab] = useState(null);
   const { labs, subLabs, isLoading, error, loadLabs } = useLabStore();
 
   useEffect(() => {
     loadLabs();
   }, [loadLabs]);
 
-  const handleLabClick = (lab) => {
-    setSelectedLab(lab);
-  };
-
-  const getSubLabsForSelected = () => {
-    if (!selectedLab) return [];
-    return subLabs[selectedLab.title] || [];
-  };
-
-  const getDetailTitle = () => {
-    if (!selectedLab) return '';
-    return selectedLab.title;
-  };
-
   const stats = useMemo(() => ([
-    { label: 'Total Labs', value: labs.length, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Active Sub-labs', value: Object.keys(subLabs).reduce((acc, key) => acc + subLabs[key].length, 0), color: 'text-slate-900', bg: 'bg-slate-50' },
-    { label: 'Pending Requests', value: 3, color: 'text-slate-900', bg: 'bg-slate-50' },
-  ]), [labs, subLabs]);
+    { 
+      label: 'Total Available Labs', 
+      value: labs.length, 
+      color: 'text-red-600', 
+      bg: 'bg-red-50',
+      icon: MdTrendingUp
+    }
+  ]), [labs]);
 
   return (
     <Box className="flex-1 flex flex-col min-w-0 bg-slate-50 app-shell h-full overflow-hidden">
-      <Header onMenuClick={onMenuClick} title={selectedLab ? getDetailTitle() : 'Infrastructure Dashboard'} onBack={selectedLab ? () => setSelectedLab(null) : undefined} />
+      <Header onMenuClick={onMenuClick} title="Infrastructure Dashboard" />
 
       <Box component="main" className="flex-1 p-4 sm:p-6 lg:p-10 overflow-auto">
-        <Box className="max-w-[1700px] mx-auto space-y-6">
+        <Box className="max-w-[1700px] mx-auto space-y-8">
           {error && (
             <Alert severity="warning" className="rounded-2xl">
               {error}. Showing the last available data.
             </Alert>
           )}
 
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }} 
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-          > 
-            <Box className="frosted-card p-2 flex flex-col md:flex-row gap-2">
+          {/* Header Row: Welcome + Stats */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 px-2">
+            <div>
+              <motion.div
+                initial={{ clipPath: 'inset(0 100% 0 0)' }}
+                animate={{ clipPath: 'inset(0 0% 0 0)' }}
+                transition={{ duration: 1, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              >
+                <Typography variant="h2" className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">
+                  Welcome, <span className="text-red-600">Meet</span>
+                </Typography>
+              </motion.div>
+              <Typography className="text-xs text-slate-400 uppercase tracking-[0.4em] font-black mt-4 ml-1">Centralized Infrastructure Hub</Typography>
+            </div>
+
+            {/* Statistics Cards */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }} 
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+              className="flex flex-col sm:flex-row gap-4"
+            > 
               {stats.map((stat, i) => (
                 <motion.div 
                   key={i} 
-                  whileHover={{ backgroundColor: "rgba(220, 38, 38, 0.02)" }}
-                  className="flex-1 flex items-center justify-between p-5 md:p-6 rounded-2xl transition-all group cursor-default"
+                  whileHover={{ y: -5 }}
+                  className="relative overflow-hidden frosted-card p-5 flex items-center justify-between group transition-all duration-300 border border-white min-h-[110px] min-w-[240px]"
                 >
-                  <div>
-                    <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</Typography>
-                    <Typography className={"text-2xl font-black mt-1 " + stat.color}>
-                      {isLoading ? (
-                        <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }}>...</motion.span>
-                      ) : stat.value}
-                    </Typography>
+                  <div className="relative z-10">
+                    <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{stat.label}</Typography>
+                    <div className="flex items-baseline gap-1">
+                      <Typography className={"text-2xl font-black tracking-tight " + stat.color}>
+                        {isLoading ? "..." : stat.value}
+                      </Typography>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Live</span>
+                    </div>
                   </div>
-                  <div className={"w-12 h-12 rounded-xl flex items-center justify-center border border-slate-100 transition-transform duration-500 group-hover:scale-110 " + stat.bg}>
-                     <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 ${stat.bg}`}>
+                     <stat.icon size={24} className={stat.color} />
                   </div>
                 </motion.div>
               ))}
-            </Box>
-          </motion.div>
+            </motion.div>
+          </div>
 
-            <div className="space-y-8">
-              <Box className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
-                <div>
-                  <motion.div
-                    initial={{ clipPath: 'inset(0 100% 0 0)' }}
-                    animate={{ clipPath: 'inset(0 0% 0 0)' }}
-                    transition={{ duration: 1, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                  >
-                    <Typography variant="h2" className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none">
-                      Welcome, <span className="text-red-600">Meet</span>
-                    </Typography>
-                  </motion.div>
-                  <Typography className="text-xs text-slate-400 uppercase tracking-[0.4em] font-black mt-4 ml-1">Centralized Infrastructure Hub</Typography>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:flex pb-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  System Status: Optimal
-                </div>
-              </Box>
+          {/* Labs Hub Section */}
+          <div className="space-y-8">
+            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              System Status: Optimal
+            </div>
+
+            <div>
               <LabGrid onLabClick={() => {}} labs={labs} />
             </div>
+          </div>
         </Box>
       </Box>
 

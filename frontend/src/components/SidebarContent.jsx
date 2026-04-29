@@ -118,17 +118,28 @@ const SidebarContent = ({ isCollapsed = false }) => {
         })}
       </List>
 
-      <Box className="p-5 border-t border-slate-200 bg-slate-50">
-        <Typography className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-3">Logged in as</Typography>
-        <Box className="flex items-center gap-3">
-          <Avatar className="w-10 h-10 bg-red-600 text-white font-bold border border-red-500">M</Avatar>
+      <Box className="p-4 border-t border-slate-100 bg-white/40 backdrop-blur-sm">
+        <motion.div 
+          whileHover={{ x: 5 }}
+          className="flex items-center gap-3 p-2 rounded-2xl transition-all duration-300 hover:bg-white/60 cursor-pointer group"
+        >
+          <div className="relative">
+            <Avatar className="w-11 h-11 bg-gradient-to-tr from-red-600 to-red-400 text-white font-black border-2 border-white shadow-md transition-transform duration-500 group-hover:rotate-[360deg]">
+              MN
+            </Avatar>
+            <div className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full shadow-sm" />
+          </div>
+          
           {!isCollapsed && (
-            <Box>
-              <Typography className="text-sm font-black text-slate-900 leading-tight">Meet Nayak</Typography>
-              <Typography className="text-[10px] text-red-600 font-bold uppercase tracking-widest mt-0.5">Admin</Typography>
+            <Box className="flex-1 min-w-0">
+              <Typography className="text-[14px] font-black text-slate-900 leading-tight truncate">Meet Nayak</Typography>
+              <Box className="flex items-center gap-1.5 mt-0.5">
+                <div className="w-1 h-1 rounded-full bg-red-500 opacity-50" />
+                <Typography className="text-[10px] text-red-600 font-black uppercase tracking-[0.15em]">Administrator</Typography>
+              </Box>
             </Box>
           )}
-        </Box>
+        </motion.div>
       </Box>
     </Box>
   );

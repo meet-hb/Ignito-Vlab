@@ -81,7 +81,7 @@ router.post('/', async (req, res) => {
 
   // Check if user already has an active session globally
   const existingSessionId = Object.keys(SESSIONS).find(sid => 
-    SESSIONS[sid].userId === userId && SESSIONS[sid].status !== 'failed'
+    SESSIONS[sid].userId === userId && SESSIONS[sid].status !== 'failed' && SESSIONS[sid].status !== 'stopped'
   );
 
   if (existingSessionId) {
@@ -103,10 +103,27 @@ router.post('/', async (req, res) => {
   try {
     const sessionId = "sess_" + Math.random().toString(36).substr(2, 9);
     
+    // Fallback if AWS is not configured
+    if (!process.env.ECS_CLUSTER) {
+        SESSIONS[sessionId] = {
+            sessionId,
+            labId,
+            userId,
+            status: "running",
+            message: "Lab environment (Mock) is ready",
+            tools: {
+                remoteDesktop: { enabled: true, url: "https://demo.ignito.com/rdp", token: "rdp-123" },
+                terminal: { enabled: true, url: "https://demo.ignito.com/terminal", token: "term-123" },
+                ide: { enabled: true, url: `/admin/compute/ide?sessionId=${sessionId}` }
+            }
+        };
+        return res.json({ success: true, ...SESSIONS[sessionId] });
+    }
+
     console.log(`Requesting Fargate Task for ${lab.taskDefinition}...`);
     const taskParams = {
       cluster: process.env.ECS_CLUSTER,
-      taskDefinition: lab.taskDefinition, 
+      taskDefinition: lab.taskDefinition || process.env.ECS_TASK_DEFINITION_FAMILY, 
       launchType: "FARGATE",
       networkConfiguration: {
         awsvpcConfiguration: {
@@ -123,7 +140,7 @@ router.post('/', async (req, res) => {
     const response = await ecsClient.send(command);
     
     if (!response.tasks || response.tasks.length === 0) {
-       throw new Error("AWS ECS failed to return a task object. Check cluster capacity or limits.");
+       throw new Error("AWS ECS failed to return a task object.");
     }
 
     const taskArn = response.tasks[0].taskArn;
@@ -173,7 +190,7 @@ router.get('/:id', async (req, res) => {
     return res.status(404).json({ success: false, message: "Session not found" });
   }
 
-  if (session.status === 'starting') {
+  if (session.status === 'starting' && session.taskArn) {
     try {
       const describeTasks = await ecsClient.send(new DescribeTasksCommand({
         cluster: process.env.ECS_CLUSTER,
@@ -196,7 +213,6 @@ router.get('/:id', async (req, res) => {
       } else if (task.lastStatus === 'STOPPED') {
         session.status = 'failed';
         session.message = `Lab environment failed to start. Reason: ${task.stoppedReason || 'Container exited'}`;
-        console.error(`Task ${session.taskArn} stopped. Reason: ${task.stoppedReason}`);
       }
     } catch (error) {
       console.error("Status Poll Error:", error);
@@ -211,6 +227,11 @@ router.post('/:id/stop', async (req, res) => {
   const session = SESSIONS[req.params.id];
   if (!session) {
     return res.status(404).json({ success: false, message: "Session not found" });
+  }
+
+  if (!session.taskArn) {
+    session.status = 'stopped';
+    return res.json({ success: true, sessionId: req.params.id, status: 'stopped' });
   }
 
   try {
