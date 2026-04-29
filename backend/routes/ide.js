@@ -116,11 +116,40 @@ router.post('/run', async (req, res) => {
     };
 
     tryExecute(0);
+  } else if (language === 'java') {
+    // Java execution requires a bit more care with filenames matching classes
+    const classMatch = file.content.match(/public\s+class\s+([a-zA-Z0-9_]+)/);
+    const className = classMatch ? classMatch[1] : 'Main';
+    
+    // Create temp directory for compilation
+    const tempDir = path.join(os.tmpdir(), `vlab_java_${Date.now()}`);
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+    
+    const javaFile = path.join(tempDir, `${className}.java`);
+    fs.writeFileSync(javaFile, file.content);
+
+    exec(`javac "${javaFile}" && java -cp "${tempDir}" ${className}`, { timeout: 15000 }, (error, stdout, stderr) => {
+      // Clean up
+      try { 
+        if (fs.existsSync(tempDir)) {
+          // Recursive delete is safer
+          fs.rmSync(tempDir, { recursive: true, force: true });
+        }
+      } catch (e) { console.error("Cleanup error:", e); }
+
+      res.json({
+        success: true,
+        output: stdout,
+        error: stderr || (error ? (error.killed ? "Execution timed out (15s)" : error.message) : null),
+        runId: "run_" + Math.random().toString(36).substr(2, 9)
+      });
+    });
   } else {
     res.json({
       success: true,
       runId: "run_" + Math.random().toString(36).substr(2, 9),
-      message: "Execution started locally"
+      output: `[System] Language ${language} execution is not yet implemented for local fallback.`,
+      message: "Execution fallback not supported"
     });
   }
 });

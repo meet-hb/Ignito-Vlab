@@ -21,7 +21,10 @@ import {
   MdVolumeUp,
   MdSearch
 } from 'react-icons/md';
+import { VscCode } from 'react-icons/vsc';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
+import { fetchUserActiveSession, startLabSession, fetchLabSessionStatus } from '../../services/labService';
 import CloudEditor from './Editor';
 import Terminal from './Terminal';
 
@@ -34,7 +37,7 @@ const appsConfig = [
 
 const getAppIcon = (iconId, size = 24) => {
   switch (iconId) {
-    case 'vscode': return <MdSettings size={size} className="text-blue-400" />;
+    case 'vscode': return <VscCode size={size} className="text-blue-400" />;
     case 'terminal': return <MdTerminal size={size} className="text-emerald-400" />;
     case 'browser': return <MdLanguage size={size} className="text-red-400" />;
     case 'files': return <MdFolder size={size} className="text-yellow-400" />;
@@ -55,32 +58,62 @@ const RemoteDesktop = () => {
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   const hasAutoOpenedRef = useRef(false);
 
+  const user = useAuthStore(state => state.user);
+  const [session, setSession] = useState(null);
+  const [error, setError] = useState('');
+
   useEffect(() => {
-    const logs = [
-      'Establishing connection to Ignito Cloud Node [v4.2.0]...',
-      'POST /api/rdp/authenticate ... 200 OK',
-      'User authenticated as: admin@ignito.com',
-      'Requesting Remote Desktop Stream (Protocol: WebRTC/H.264)...',
-      'Allocating virtual frame buffer...',
-      'Handshaking with Guacamole Proxy...',
-      'Connection established. Streaming started at 60 FPS.'
-    ];
-
-    let currentLogIndex = 0;
-    const interval = setInterval(() => {
-      if (currentLogIndex < logs.length) {
-        const timestamp = new Date().toLocaleTimeString();
-        const logText = logs[currentLogIndex];
-        setConnectionLog(prev => [...prev, `[${timestamp}] ${logText}`]);
-        currentLogIndex++;
-      } else {
-        clearInterval(interval);
-        setTimeout(() => setConnecting(false), 1000);
+    const params = new URLSearchParams(location.search);
+    const labId = params.get('labId');
+    
+    const initializeSession = async () => {
+      if (!labId || !user?.email) {
+        setConnecting(false);
+        return;
       }
-    }, 300);
 
-    return () => clearInterval(interval);
-  }, []);
+      try {
+        setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Authenticating user session...`]);
+        
+        // 1. Check for existing session
+        const activeRes = await fetchUserActiveSession(user.email);
+        if (activeRes.success && activeRes.session && activeRes.session.labId === labId) {
+          setSession(activeRes.session);
+          setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Resuming existing session: ${activeRes.session.sessionId}`]);
+        } else {
+          // 2. Start new session
+          setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] No active session found. Provisioning new environment for Lab: ${labId}...`]);
+          const startRes = await startLabSession({ labId, userId: user.email });
+          
+          let currentStatus = 'starting';
+          let statusRes = null;
+          
+          while (currentStatus === 'starting') {
+            statusRes = await fetchLabSessionStatus(startRes.sessionId);
+            currentStatus = statusRes.status;
+            if (currentStatus === 'starting') {
+              setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Infrastructure provisioning in progress...`]);
+              await new Promise(r => setTimeout(r, 3000));
+            }
+          }
+          
+          if (currentStatus === 'running') {
+            setSession(statusRes);
+            setConnectionLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Environment ready! Connecting to Remote Desktop...`]);
+          } else {
+            throw new Error('Failed to start lab environment');
+          }
+        }
+        
+        setTimeout(() => setConnecting(false), 1500);
+      } catch (err) {
+        setError(err.message || 'Failed to initialize session');
+        setConnectionLog(prev => [...prev, `[ERROR] ${err.message}`]);
+      }
+    };
+
+    initializeSession();
+  }, [location.search, user]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -216,7 +249,7 @@ const RemoteDesktop = () => {
                 </div>
               </Box>
               <Box className="flex-1 overflow-hidden">
-                 <win.component onMenuClick={() => {}} />
+                 <win.component onMenuClick={() => {}} session={session} />
               </Box>
             </div>
           );

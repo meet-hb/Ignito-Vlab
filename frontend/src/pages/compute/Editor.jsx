@@ -62,7 +62,7 @@ const detectLanguage = (fileName) => {
   return 'text';
 };
 
-const CloudEditor = ({ onMenuClick }) => {
+const CloudEditor = ({ onMenuClick, session: propSession }) => {
   const navigate = useNavigate();
   const editorRef = useRef(null);
   const [files, setFiles] = useState([]);
@@ -74,16 +74,23 @@ const CloudEditor = ({ onMenuClick }) => {
   const [webPreviewCode, setWebPreviewCode] = useState('');
   const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState('editor'); // 'editor' or 'preview'
-  const [sessionId] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('sessionId') || '';
-  });
+  
+  // Get sessionId from prop OR URL
+  const [sessionId, setSessionId] = useState('');
 
   useEffect(() => {
-    if (!sessionId) {
+    const params = new URLSearchParams(window.location.search);
+    const urlSessionId = params.get('sessionId');
+    const finalSessionId = propSession?.sessionId || urlSessionId || '';
+    
+    setSessionId(finalSessionId);
+    
+    if (finalSessionId) {
+      setError('');
+    } else {
       setError('Active session required. Please start a lab first.');
     }
-  }, [sessionId]);
+  }, [propSession, window.location.search]);
 
   useEffect(() => {
     let isMounted = true;

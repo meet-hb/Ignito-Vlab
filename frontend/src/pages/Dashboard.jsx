@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import { motion } from 'framer-motion';
-import { MdTrendingUp, MdLayers, MdHourglassEmpty } from 'react-icons/md';
+import { MdTrendingUp } from 'react-icons/md';
 
 import Header from '../components/Header';
 import LabGrid from '../components/LabGrid';
@@ -23,15 +23,8 @@ export default function Dashboard({ onMenuClick }) {
       color: 'text-red-600', 
       bg: 'bg-red-50',
       icon: MdTrendingUp
-    },
-    {
-      label: 'Active Sub-labs',
-      value: Object.keys(subLabs).reduce((acc, key) => acc + subLabs[key].length, 0),
-      color: 'text-slate-900',
-      bg: 'bg-slate-50',
-      icon: MdLayers
     }
-  ]), [labs, subLabs]);
+  ]), [labs]);
 
   return (
     <Box className="flex-1 flex flex-col min-w-0 bg-slate-50 app-shell h-full overflow-hidden">

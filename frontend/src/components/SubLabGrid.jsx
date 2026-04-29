@@ -83,7 +83,7 @@ const SubLabGrid = ({ labs }) => {
                 variant="outlined"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/admin/labs/view/${lab.id}`);
+                  navigate(`/admin/compute/rdp?labId=${lab.id}&app=vscode`);
                 }}
                 className="!border-red-600 !text-red-600 hover:!bg-red-600 hover:!text-white rounded-xl px-6 py-2.5 font-black text-xs tracking-widest transition-all uppercase"
                 startIcon={<MdPlayArrow size={18} />}

@@ -120,6 +120,11 @@ const ViewLab = ({ onMenuClick }) => {
 
       const statusResponse = await fetchLabSessionStatus(startResponse.sessionId);
       setSession(statusResponse);
+      
+      // If it starts successfully, go directly to RDP
+      if (statusResponse.status === 'running' || statusResponse.status === 'starting') {
+        navigate(`/admin/compute/rdp?labId=${id}&app=vscode`);
+      }
     } catch (startError) {
       setError(startError.message || 'Unable to start lab');
     } finally {
@@ -143,8 +148,6 @@ const ViewLab = ({ onMenuClick }) => {
   };
 
   const metricItems = useMemo(() => ([
-    { icon: <MdAccessTime size={22} />, label: `${labDetails?.durationMinutes || 0} MINS`, sub: 'Duration' },
-    { icon: <MdStars size={22} />, label: `${labDetails?.credits || 0} CREDITS`, sub: 'Cost' },
     { icon: <MdBarChart size={22} />, label: (labDetails?.complexity || 'Expert').toUpperCase(), sub: 'Complexity' },
     { icon: <MdFolderOpen size={22} />, label: (labDetails?.category || 'General').toUpperCase(), sub: 'Category' },
   ]), [labDetails]);
