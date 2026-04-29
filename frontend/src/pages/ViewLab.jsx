@@ -52,7 +52,7 @@ const ViewLab = ({ onMenuClick }) => {
 
         // Check if user already has an active session for this lab
         if (user?.email) {
-          const sessionResponse = await fetchUserActiveSession(user.email);
+          const sessionResponse = await fetchUserActiveSession(user.email, id);
           if (mounted && sessionResponse.success && sessionResponse.session) {
             setSession(sessionResponse.session);
           }
@@ -151,7 +151,10 @@ const ViewLab = ({ onMenuClick }) => {
 
   const credentials = session?.credentials;
   const toolLinks = session?.tools;
-  const isLabStarted = session?.status === 'running';
+  const isLabRunning = session?.status === 'running';
+  const isLabStarting = session?.status === 'starting' || isStarting;
+  const hasActiveSession = session?.status === 'running' || session?.status === 'starting';
+
   const remoteDesktopUrl = toolLinks?.remoteDesktop?.url
     ? `${toolLinks.remoteDesktop.url}${toolLinks.remoteDesktop.url.includes('?') ? '&' : '?'}app=vscode`
     : '/admin/compute/rdp?app=vscode';
@@ -217,13 +220,18 @@ const ViewLab = ({ onMenuClick }) => {
 
               <Grid item xs={12} lg="auto" sx={{ ml: { lg: 'auto' } }}>
                 <div className="flex flex-col items-center lg:items-end gap-4 md:gap-6 bg-slate-50/50 p-5 sm:p-6 md:p-8 rounded-[28px] md:rounded-[32px] border border-slate-100 backdrop-blur-sm w-full">
-                  {isLabStarted ? (
+                  {isLabRunning ? (
                     <div className="text-center lg:text-right">
                       <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Session Remaining</Typography>
                       <Typography className="font-mono font-black text-red-600 text-3xl sm:text-4xl md:text-5xl tracking-tighter drop-shadow-[0_0_15px_rgba(220,38,38,0.2)]">
                         {formatTime(secondsLeft)}
                       </Typography>
                     </div>
+                  ) : isLabStarting ? (
+                    <Typography className="text-[11px] font-black text-blue-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                      PROVISIONING HUB...
+                    </Typography>
                   ) : (
                     <Typography className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -233,14 +241,14 @@ const ViewLab = ({ onMenuClick }) => {
 
                   <Button
                     variant="contained"
-                    onClick={isLabStarted ? handleEndLab : handleStartLab}
-                    disabled={isStarting}
-                    className={`text-white rounded-2xl px-6 sm:px-10 md:px-12 py-4 md:py-5 font-black text-xs sm:text-sm uppercase tracking-widest transition-all duration-500 shadow-2xl active:scale-95 w-full lg:w-auto ${isLabStarted
+                    onClick={hasActiveSession ? handleEndLab : handleStartLab}
+                    disabled={isLabStarting}
+                    className={`text-white rounded-2xl px-6 sm:px-10 md:px-12 py-4 md:py-5 font-black text-xs sm:text-sm uppercase tracking-widest transition-all duration-500 shadow-2xl active:scale-95 w-full lg:w-auto ${hasActiveSession
                       ? '!bg-slate-900 hover:!bg-black border border-white/10'
                       : '!bg-red-600 hover:!bg-red-700 border border-red-500/20 shadow-red-500/30'
                       }`}
                   >
-                    {isStarting ? 'STARTING LAB...' : isLabStarted ? 'TERMINATE SESSION' : 'INITIALIZE HUB'}
+                    {isLabStarting ? 'STARTING LAB...' : isLabRunning ? 'TERMINATE SESSION' : 'INITIALIZE HUB'}
                   </Button>
                 </div>
               </Grid>

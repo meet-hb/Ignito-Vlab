@@ -79,14 +79,18 @@ router.post('/', async (req, res) => {
   const { labId, userId } = req.body;
   console.log(`Starting lab session: labId=${labId}, userId=${userId}`);
 
-  // Check if user already has an active session
+  // Check if user already has an active session globally
   const existingSessionId = Object.keys(SESSIONS).find(sid => 
     SESSIONS[sid].userId === userId && SESSIONS[sid].status !== 'failed'
   );
 
   if (existingSessionId) {
-    console.log(`User ${userId} already has an active session: ${existingSessionId}`);
-    return res.json({ success: true, ...SESSIONS[existingSessionId], message: "You already have an active lab session." });
+    if (SESSIONS[existingSessionId].labId === labId) {
+      console.log(`User ${userId} already has an active session for ${labId}: ${existingSessionId}`);
+      return res.json({ success: true, ...SESSIONS[existingSessionId], message: "You already have an active lab session for this lab." });
+    } else {
+      return res.status(400).json({ success: false, message: "You already have an active lab running. Please stop it to run this lab." });
+    }
   }
 
   const lab = LABS.find(l => l.id === labId);
@@ -146,9 +150,14 @@ router.post('/', async (req, res) => {
 // GET /api/lab-sessions/user/:userId
 router.get('/user/:userId', (req, res) => {
   const { userId } = req.params;
-  const sessionId = Object.keys(SESSIONS).find(sid => 
-    SESSIONS[sid].userId === userId && SESSIONS[sid].status !== 'failed'
-  );
+  const { labId } = req.query;
+  const sessionId = Object.keys(SESSIONS).find(sid => {
+    let isMatch = SESSIONS[sid].userId === userId && SESSIONS[sid].status !== 'failed';
+    if (labId) {
+      isMatch = isMatch && SESSIONS[sid].labId === labId;
+    }
+    return isMatch;
+  });
 
   if (sessionId) {
     res.json({ success: true, session: SESSIONS[sessionId] });
