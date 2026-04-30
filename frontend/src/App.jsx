@@ -14,6 +14,7 @@ import AllUsers from './pages/AllUsers';
 import CreatePolicy from './pages/CreatePolicy';
 import ViewLab from './pages/ViewLab';
 import Login from './pages/Login';
+import AddCredit from './pages/AddCredit';
 // Compute Pages (Lightsail Clone)
 import Instances from './pages/compute/Instances';
 import CreateInstance from './pages/compute/CreateInstance';
@@ -89,6 +90,7 @@ function AuthenticatedApp({ isSidebarOpen, isCollapsed, toggleSidebar, setIsSide
           <Route path="/admin/users" element={<PageWrapper><AllUsers onMenuClick={toggleSidebar} /></PageWrapper>} />
           <Route path="/admin/policies/new" element={<PageWrapper><CreatePolicy onMenuClick={toggleSidebar} /></PageWrapper>} />
           <Route path="/admin/labs/view/:id" element={<PageWrapper><ViewLab onMenuClick={toggleSidebar} /></PageWrapper>} />
+          <Route path="/add-credit" element={<PageWrapper><AddCredit onMenuClick={toggleSidebar} /></PageWrapper>} />
           
           {/* Compute Routes - Hidden for now */}
           {/* <Route path="/admin/compute" element={<Navigate to="/admin/compute/instances" replace />} />

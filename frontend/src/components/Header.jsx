@@ -96,7 +96,7 @@ const Header = ({ onMenuClick, title, onBack }) => {
           <div className="flex items-center gap-2">
             <img src="/assets/logo-icon.png" alt="VL" className="h-8 w-8 object-contain lg:hidden" />
             <Typography variant="h4" className="font-black text-slate-900 tracking-tighter uppercase whitespace-nowrap text-xl md:text-2xl lg:text-3xl">
-              Ignito VLab
+              <span className="text-red-600">MCA</span>
             </Typography>
           </div>
         </div>
@@ -161,27 +161,19 @@ const Header = ({ onMenuClick, title, onBack }) => {
             <MdNotificationsNone size={24} />
           </IconButton>
 
-          {/* User Profile Trigger */}
+          {/* User Welcome Style (Image 2 Replacement) */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleClick}
-            className="flex items-center gap-3 cursor-pointer transition-all"
+            className="flex flex-col items-end cursor-pointer transition-all pr-1"
           >
-            <div className="relative">
-               <Avatar className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-tr from-red-600 to-red-400 border-2 border-white text-white font-black text-xs">
-                 MN
-               </Avatar>
-               <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 border border-white rounded-full shadow-sm" />
-            </div>
-            <div className="hidden lg:block text-left min-w-[100px]">
-              <Typography className="text-[13px] font-black text-slate-900 leading-none mb-0.5">
-                Meet Nayak
-              </Typography>
-              <Typography className="text-red-600 font-black uppercase tracking-[0.1em] text-[9px]">
-                Administrator
-              </Typography>
-            </div>
+            <Typography variant="h6" className="font-bold text-slate-900 tracking-tight leading-none text-sm md:text-base">
+              Welcome, <span className="text-red-600">Meet</span>
+            </Typography>
+            <Typography className="text-slate-400 font-black uppercase tracking-[0.1em] text-[7px] md:text-[8px] mt-0.5">
+              Infrastructure Hub
+            </Typography>
           </motion.div>
         </div>
       </div>

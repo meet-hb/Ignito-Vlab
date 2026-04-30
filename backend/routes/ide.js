@@ -53,6 +53,19 @@ router.post('/save', (req, res) => {
   }
 });
 
+// DELETE /api/files
+router.delete('/', (req, res) => {
+  const { path: filePath } = req.query;
+  const fileIndex = FILES.findIndex(f => f.path === filePath);
+
+  if (fileIndex !== -1) {
+    FILES.splice(fileIndex, 1);
+    res.json({ success: true, message: "File deleted successfully" });
+  } else {
+    res.status(404).json({ success: false, message: "File not found" });
+  }
+});
+
 // POST /api/run
 router.post('/run', async (req, res) => {
   const session = getSession(req);

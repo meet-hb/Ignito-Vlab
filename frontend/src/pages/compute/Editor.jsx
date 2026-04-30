@@ -25,20 +25,21 @@ import {
   MdJavascript,
   MdHtml,
   MdCss,
-  MdLanguage
+  MdLanguage,
+  MdPowerSettingsNew
 } from 'react-icons/md';
 import Editor from '@monaco-editor/react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
-import { fetchFileContent, fetchFiles, runFile, saveFile } from '../../services/ideService';
+import { fetchFileContent, fetchFiles, runFile, saveFile, deleteFile } from '../../services/ideService';
 
 const getFileIcon = (fileName, type) => {
   if (type === 'folder') return <MdFolder className="text-blue-400 shrink-0" />;
-  
+
   const ext = fileName.split('.').pop().toLowerCase();
   switch (ext) {
     case 'py': return <MdCode className="text-blue-400 shrink-0" />;
-    case 'js': 
+    case 'js':
     case 'jsx': return <MdCode className="text-yellow-400 shrink-0" />;
     case 'html': return <MdHtml className="text-orange-500 shrink-0" />;
     case 'css': return <MdCss className="text-blue-300 shrink-0" />;
@@ -62,7 +63,7 @@ const detectLanguage = (fileName) => {
   return 'text';
 };
 
-const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerminal }) => {
+const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerminal, onStopLab }) => {
   const navigate = useNavigate();
   const editorRef = useRef(null);
   const [files, setFiles] = useState([]);
@@ -74,7 +75,8 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
   const [webPreviewCode, setWebPreviewCode] = useState('');
   const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState('editor'); // 'editor' or 'preview'
-  
+  const [showPreview, setShowPreview] = useState(false);
+
   // Get sessionId from prop OR URL
   const [sessionId, setSessionId] = useState('');
 
@@ -82,9 +84,9 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
     const params = new URLSearchParams(window.location.search);
     const urlSessionId = params.get('sessionId');
     const finalSessionId = propSession?.sessionId || urlSessionId || '';
-    
+
     setSessionId(finalSessionId);
-    
+
     if (finalSessionId) {
       setError('');
     } else {
@@ -118,7 +120,7 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
 
   const handleFormat = () => {
     if (!editorRef.current) return;
-    
+
     // Attempt 1: Use Monaco's built-in formatter
     const action = editorRef.current.getAction('editor.action.formatDocument');
     if (action) {
@@ -133,7 +135,7 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
 
   const applyFallbackFormatting = () => {
     if (!editorRef.current) return;
-    
+
     const value = editorRef.current.getValue();
     if (!value) return;
 
@@ -141,22 +143,22 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
       const lines = value.split('\n');
       let indentLevel = 0;
       const tabSize = 2;
-      
+
       const formattedLines = lines.map(line => {
         let trimmed = line.trim();
-        
+
         // Decrease indent for closing braces/brackets before processing line
         if (trimmed.startsWith('}') || trimmed.startsWith(']') || trimmed.startsWith(')')) {
           indentLevel = Math.max(0, indentLevel - 1);
         }
-        
+
         const formattedLine = ' '.repeat(indentLevel * tabSize) + trimmed;
-        
+
         // Increase indent for opening braces/brackets after processing line
         if (trimmed.endsWith('{') || trimmed.endsWith('[') || trimmed.endsWith('(') || trimmed.endsWith(':')) {
           indentLevel++;
         }
-        
+
         return formattedLine;
       });
 
@@ -186,14 +188,14 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
 
   const handleRun = async () => {
     if (!activeFile) return;
-    
+
     // Auto-save before running to ensure backend has the latest content
     await handleSave();
-    
+
     setIsRunning(true);
     setError('');
     setTerminalHistory(['> Executing ' + activeFile.name + '...', '']);
-    
+
     // Generate Web Preview
     let codeToRender = '';
     const content = activeFile.content;
@@ -209,7 +211,7 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
 
     if (codeToRender) {
       setWebPreviewCode(codeToRender);
-      
+
       // If it's a pure web file (HTML/CSS), we don't need to call the backend run
       // because the preview is already rendered locally in the iframe.
       if (ext === 'html' || ext === 'css') {
@@ -333,13 +335,27 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
     reader.readAsText(file);
   };
 
-  const handleDeleteFile = (index) => {
-    const updatedFiles = files.filter((_, fileIndex) => fileIndex !== index);
-    setFiles(updatedFiles);
-    if (activeFileIndex === index) {
-      setActiveFileIndex(updatedFiles.length > 0 ? 0 : -1);
-    } else if (activeFileIndex > index) {
-      setActiveFileIndex(activeFileIndex - 1);
+  const handleDeleteFile = async (index) => {
+    const fileToDelete = files[index];
+    if (!fileToDelete) return;
+
+    if (!window.confirm(`Are you sure you want to delete ${fileToDelete.name}?`)) return;
+
+    try {
+      const response = await deleteFile(fileToDelete.path);
+      if (response.success) {
+        const updatedFiles = files.filter((_, fileIndex) => fileIndex !== index);
+        setFiles(updatedFiles);
+        if (activeFileIndex === index) {
+          setActiveFileIndex(updatedFiles.length > 0 ? 0 : -1);
+        } else if (activeFileIndex > index) {
+          setActiveFileIndex(activeFileIndex - 1);
+        }
+      } else {
+        setError(response.message || 'Failed to delete file');
+      }
+    } catch (err) {
+      setError('Error deleting file: ' + err.message);
     }
   };
 
@@ -424,9 +440,9 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
               ))}
             </Box>
 
-            <Box className="flex items-center gap-4 shrink-0">
+            <Box className="flex items-center gap-2 sm:gap-4 shrink-0">
               <IconButton onClick={handleFormat} className="hover:!text-red-500 p-1.5"><MdFormatAlignLeft size={18} style={{ color: 'white' }} /></IconButton>
-              <IconButton 
+              <IconButton
                 onClick={() => {
                   handleSave();
                   // Local download logic
@@ -441,33 +457,48 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                   }
-                }} 
+                }}
                 className="hover:!text-emerald-500 p-1.5"
               >
                 <MdSave size={18} style={{ color: 'white' }} />
               </IconButton>
-              <Button
-                onClick={handleRun}
-                variant="contained"
-                size="small"
-                disabled={isRunning}
-                startIcon={isRunning ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <MdPlayArrow size={16} />}
-                className="!text-[10px] !font-black px-4 rounded-lg !bg-red-600 shadow-lg shadow-red-500/20"
-              >
-                {isRunning ? 'Running...' : 'Run'}
-              </Button>
+
+              <div className="flex items-center gap-1.5 ml-2">
+                <Button
+                  onClick={handleRun}
+                  variant="contained"
+                  size="small"
+                  disabled={isRunning}
+                  startIcon={isRunning ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <MdPlayArrow size={16} />}
+                  className="!text-[10px] !font-black px-4 h-8 rounded-lg !bg-red-600 shadow-lg shadow-red-500/20"
+                >
+                  {isRunning ? 'Running...' : 'Run'}
+                </Button>
+
+                {onStopLab && (
+                  <Button
+                    onClick={onStopLab}
+                    variant="contained"
+                    size="small"
+                    startIcon={<MdPowerSettingsNew size={16} />}
+                    className="!text-[10px] !font-black px-4 h-8 rounded-lg !bg-red-600 shadow-lg shadow-red-500/20 uppercase tracking-widest transition-all"
+                  >
+                    Stop Lab
+                  </Button>
+                )}
+              </div>
             </Box>
           </Box>
 
           {/* Mobile Tab Switcher */}
           <Box className="xl:hidden flex bg-[#252526] border-b border-[#181818] shrink-0">
-            <Button 
+            <Button
               onClick={() => setActiveTab('editor')}
               className={`flex-1 !rounded-none !py-3 !font-black !text-[11px] !tracking-widest uppercase transition-all ${activeTab === 'editor' ? '!bg-[#1e1e1e] !text-red-500 !border-b-2 !border-red-500' : '!text-slate-500'}`}
             >
               Code Editor
             </Button>
-            <Button 
+            <Button
               onClick={() => setActiveTab('preview')}
               className={`flex-1 !rounded-none !py-3 !font-black !text-[11px] !tracking-widest uppercase transition-all ${activeTab === 'preview' ? '!bg-[#1e1e1e] !text-red-500 !border-b-2 !border-red-500' : '!text-slate-500'}`}
             >
@@ -477,9 +508,9 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
 
           <Box className="flex-1 flex flex-col xl:flex-row min-h-0 relative overflow-hidden">
             {/* Editor Side */}
-            <Box 
-              id="editor-area" 
-              className={`flex-1 flex flex-col border-b xl:border-b-0 xl:border-r border-[#333] ${activeTab === 'editor' ? 'flex' : 'hidden xl:flex'}`}
+            <Box
+              id="editor-area"
+              className={`flex-1 flex flex-col border-b xl:border-b-0 xl:border-r border-[#333] ${activeTab === 'preview' ? 'hidden xl:flex' : 'flex'}`}
             >
               {activeFile ? (
                 <Editor
@@ -503,9 +534,9 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
                     <Typography className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter">Start Coding</Typography>
                     <Typography className="text-xs sm:text-sm text-slate-500 max-w-xs mx-auto">Create a new file to start building your project in the Ignito Cloud IDE.</Typography>
                   </div>
-                  <Button 
-                    onClick={handleAddFile} 
-                    variant="contained" 
+                  <Button
+                    onClick={handleAddFile}
+                    variant="contained"
                     size="large"
                     className="!bg-red-600 !text-white !font-black !px-6 sm:!px-8 !py-2 sm:!py-3 !rounded-lg sm:!rounded-xl !shadow-xl !shadow-red-600/20 hover:!bg-red-700 transition-all hover:scale-105 active:scale-95"
                     startIcon={<MdAdd size={20} />}
@@ -523,8 +554,8 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
             </Box>
 
             {/* W3Schools style Web Output Side */}
-            <Box 
-              id="web-preview-area" 
+            <Box
+              id="web-preview-area"
               className={`w-full xl:w-[450px] 2xl:w-[550px] bg-white flex flex-col flex-1 xl:flex-none shrink-0 ${activeTab === 'preview' ? 'flex' : 'hidden xl:flex'}`}
             >
               <Box className="px-4 h-10 bg-[#f1f1f1] flex items-center justify-between border-b border-[#ddd] shrink-0">
@@ -535,12 +566,12 @@ const CloudEditor = ({ onMenuClick, session: propSession, hideHeader, onOpenTerm
                   <div className="w-2 h-2 rounded-full bg-red-400" />
                   <div className="w-2 h-2 rounded-full bg-yellow-400" />
                   <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     onClick={() => {
                       setWebPreviewCode('');
                       if (window.innerWidth < 1280) setActiveTab('editor');
-                    }} 
+                    }}
                     className="ml-2 hover:text-red-600"
                   >
                     <MdClose size={16} />

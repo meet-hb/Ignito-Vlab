@@ -276,21 +276,36 @@ const RemoteDesktop = () => {
 
             {/* Progress Area */}
             <Box className="w-full space-y-6">
-              <Box className="relative h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                <Box 
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 to-orange-500 transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.5)]"
-                  style={{ width: `${loadingProgress}%` }}
-                />
-              </Box>
-              
-              <div className="flex justify-between items-center px-1">
-                <Typography className="text-slate-400 text-[11px] font-black uppercase tracking-widest animate-pulse">
-                  {loadingStatus}
-                </Typography>
-                <Typography className="text-red-500 font-mono text-sm font-bold">
-                  {Math.round(loadingProgress)}%
-                </Typography>
-              </div>
+              {!error ? (
+                <>
+                  <Box className="relative h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <Box 
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 to-orange-500 transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                      style={{ width: `${loadingProgress}%` }}
+                    />
+                  </Box>
+                  
+                  <div className="flex justify-between items-center px-1">
+                    <Typography className="text-slate-400 text-[11px] font-black uppercase tracking-widest animate-pulse">
+                      {loadingStatus}
+                    </Typography>
+                    <Typography className="text-red-500 font-mono text-sm font-bold">
+                      {Math.round(loadingProgress)}%
+                    </Typography>
+                  </div>
+                </>
+              ) : (
+                <Box className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center">
+                  <Typography className="text-red-500 text-sm font-bold mb-4">{error}</Typography>
+                  <Button 
+                    onClick={() => navigate('/')}
+                    variant="outlined" 
+                    className="!border-red-500 !text-red-500 !font-black !text-[10px] uppercase tracking-widest !rounded-xl !px-6"
+                  >
+                    Go Back to Dashboard
+                  </Button>
+                </Box>
+              )}
             </Box>
           </div>
         </Box>
@@ -336,32 +351,11 @@ const RemoteDesktop = () => {
               className={`absolute bg-[#1e1e1e] shadow-2xl border border-white/10 overflow-hidden flex flex-col pointer-events-auto transition-all duration-300 ${isMaximized ? 'inset-0 bottom-0' : 'inset-10 rounded-2xl'}`}
               style={{ zIndex: activeWindow === win.id ? 100 : 10 + index }}
             >
-              <Box className="h-10 bg-[#252526] flex items-center justify-between px-4">
-                <div className="flex items-center gap-3">
-                  {getAppIcon(win.icon, 18)}
-                  <Typography className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{win.title}</Typography>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    onClick={() => setShowStopModal(true)}
-                    variant="contained"
-                    size="small"
-                    className="!bg-red-600 hover:!bg-red-700 !text-white !text-[9px] !font-black h-6 px-3 rounded-md shadow-lg shadow-red-600/20 uppercase tracking-widest transition-all mr-4"
-                    startIcon={<MdPowerSettingsNew size={14} />}
-                  >
-                    Stop Lab
-                  </Button>
-                  <IconButton onClick={() => minimizeWindow(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-white/10"><MdMinimize size={16} /></IconButton>
-                  <IconButton onClick={() => toggleMaximize(win.id)} size="small" sx={{ color: 'white' }} className="hover:bg-white/10"><MdCropSquare size={16} /></IconButton>
-                  <IconButton onClick={() => navigate('/')} size="small" sx={{ color: 'white' }} className="hover:bg-red-600 hover:text-white transition-colors">
-                    <MdClose size={16} />
-                  </IconButton>
-                </div>
-              </Box>
               <Box className="flex-1 overflow-hidden">
                  <win.component 
                    onMenuClick={() => {}} 
                    session={session} 
+                   onStopLab={() => setShowStopModal(true)}
                    hideHeader={win.id === 'terminal' ? !new URLSearchParams(location.search).get('labId')?.toLowerCase().includes('linux') : true} 
                    onOpenTerminal={() => {
                      // Minimize VS Code and Open Terminal Fullscreen

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Alert, IconButton, Button } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdTrendingUp, MdArrowBack, MdLayers } from 'react-icons/md';
+import { MdTrendingUp, MdArrowBack, MdLayers, MdSchool } from 'react-icons/md';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import Header from '../components/Header';
 import LabGrid from '../components/LabGrid';
@@ -12,14 +13,24 @@ import { useLabStore } from '../store/labStore';
 
 export default function Dashboard({ onMenuClick }) {
   const { labs, isLoading, error, loadLabs } = useLabStore();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedSemester, setSelectedSemester] = useState(null);
+
+  // Sync state with URL params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sem = params.get('semester');
+    setSelectedSemester(sem);
+  }, [location.search]);
 
   useEffect(() => {
     loadLabs();
   }, [loadLabs]);
 
   const semesters = useMemo(() => {
-    const groups = labs.reduce((acc, lab) => {
+    const safeLabs = labs || [];
+    const groups = safeLabs.reduce((acc, lab) => {
       const sem = lab.semester || 'Other';
       if (!acc[sem]) acc[sem] = [];
       acc[sem].push(lab);
@@ -35,93 +46,122 @@ export default function Dashboard({ onMenuClick }) {
   }, [labs]);
 
   const filteredLabs = useMemo(() => {
+    const safeLabs = labs || [];
     if (!selectedSemester) return [];
-    return labs.filter(lab => (lab.semester || 'Other') === selectedSemester);
+    return safeLabs.filter(lab => (lab.semester || 'Other') === selectedSemester);
   }, [labs, selectedSemester]);
 
-  const stats = useMemo(() => ([
-    { 
-      label: 'Total Available Labs', 
-      value: labs.length, 
-      color: 'text-red-600', 
-      bg: 'bg-red-50',
-      icon: MdTrendingUp
-    }
-  ]), [labs]);
+  const stats = useMemo(() => {
+    const safeLabs = labs || [];
+    const totalCredits = safeLabs.reduce((sum, lab) => sum + (lab.credits || 0), 0);
+    const totalSemesters = new Set(safeLabs.map(lab => lab.semester || 'Other')).size;
+    const totalLabs = safeLabs.length;
+    const activeLabs = safeLabs.filter(l => l.status !== 'inactive').length;
+
+    return [
+      { 
+        label: 'Total Credit', 
+        value: totalCredits, 
+        color: 'text-blue-600', 
+        bg: 'bg-blue-50',
+        icon: MdLayers
+      },
+      { 
+        label: 'Total Semester', 
+        value: totalSemesters, 
+        color: 'text-emerald-600', 
+        bg: 'bg-emerald-50',
+        icon: MdSchool
+      },
+      { 
+        label: 'Total Labs', 
+        value: totalLabs, 
+        color: 'text-red-600', 
+        bg: 'bg-red-50',
+        icon: MdTrendingUp
+      },
+      { 
+        label: 'Active Labs', 
+        value: activeLabs, 
+        color: 'text-orange-600', 
+        bg: 'bg-orange-50',
+        icon: MdTrendingUp
+      }
+    ];
+  }, [labs]);
+
+  const handleSemesterClick = (name) => {
+    navigate(`/?semester=${encodeURIComponent(name)}`);
+  };
+
+  const handleBack = () => {
+    navigate('/');
+  };
 
   return (
     <Box className="flex-1 flex flex-col min-w-0 bg-slate-50 app-shell h-full overflow-hidden">
       <Header onMenuClick={onMenuClick} title="Infrastructure Dashboard" />
 
-      <Box component="main" className="flex-1 p-3 sm:p-5 overflow-auto">
-        <Box className="max-w-[1700px] mx-auto space-y-4 sm:space-y-5">
+      <Box component="main" className="flex-1 p-2 sm:p-4 overflow-auto">
+        <Box className="max-w-[1700px] mx-auto space-y-2 sm:space-y-4">
           {error && (
-            <Alert severity="warning" className="rounded-xl py-1 px-3">
-              <Typography className="text-xs">{error}. Showing last available data.</Typography>
+            <Alert severity="warning" className="rounded-lg py-0.5 px-1.5">
+              <Typography className="text-[9px]">{error}.</Typography>
             </Alert>
           )}
 
-          {/* Header Row: Welcome + Stats */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5 px-1">
-            <div>
-              <motion.div
-                initial={{ clipPath: 'inset(0 100% 0 0)' }}
-                animate={{ clipPath: 'inset(0 0% 0 0)' }}
-                transition={{ duration: 1, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              >
-                <Typography variant="h2" className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-none">
-                  Welcome, <span className="text-red-600">Meet</span>
-                </Typography>
-              </motion.div>
-              <Typography className="text-[8px] sm:text-[9px] text-slate-400 uppercase tracking-[0.25em] font-black mt-1.5 ml-0.5">Infrastructure Hub</Typography>
-            </div>
-
-            {/* Statistics Cards */}
+          {/* Enhanced Premium Stats Row */}
+          <div className="px-1">
             <motion.div 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-              className="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
             > 
               {stats.map((stat, i) => (
                 <motion.div 
                   key={i} 
-                  whileHover={{ y: -2 }}
-                  className="relative overflow-hidden frosted-card p-2.5 sm:p-3 flex items-center justify-between gap-3 group transition-all duration-300 border border-white min-h-[60px] sm:min-h-[80px] flex-1 sm:min-w-[200px]"
+                  whileHover={{ y: -2, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' }}
+                  className="relative overflow-hidden bg-white/80 backdrop-blur-xl p-4 sm:p-5 flex items-center justify-between gap-4 group transition-all duration-300 border border-slate-200 rounded-2xl min-h-[90px] sm:min-h-[110px]"
                 >
                   <div className="relative z-10 flex-1">
-                    <Typography className="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5 whitespace-nowrap">{stat.label}</Typography>
-                    <div className="flex items-baseline gap-1">
-                      <Typography className={"text-lg sm:text-xl font-black tracking-tight " + stat.color}>
+                    <Typography className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1.5 whitespace-nowrap">
+                      {stat.label}
+                    </Typography>
+                    <div className="flex items-baseline gap-1.5">
+                      <Typography className={"text-xl sm:text-3xl font-black tracking-tight " + stat.color}>
                         {isLoading ? "..." : stat.value}
                       </Typography>
-                      <span className="text-[7px] sm:text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Live</span>
+                      <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Live</span>
                     </div>
                   </div>
 
-                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-500 group-hover:scale-110 shrink-0 ${stat.bg}`}>
-                     <stat.icon size={16} className={stat.color} />
+                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6 shrink-0 ${stat.bg} border border-white/50 shadow-sm`}>
+                     <stat.icon size={24} className={stat.color} />
                   </div>
+                  
+                  {/* Subtle Background Decoration */}
+                  <div className={`absolute -right-2 -bottom-2 w-16 h-16 rounded-full blur-3xl opacity-20 ${stat.bg}`} />
                 </motion.div>
               ))}
             </motion.div>
           </div>
 
           {/* Labs Hub Section */}
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-               <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-900 text-white rounded-xl">
-                    <MdLayers size={20} />
+          <div className="space-y-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 px-1">
+               <div className="flex items-center gap-1.5">
+                  <div className="p-1 bg-slate-900 text-white rounded-lg">
+                    <MdLayers size={12} />
                   </div>
                   <div>
-                    <Typography className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none">
-                      {selectedSemester ? `Explore ${selectedSemester}` : "Academic Curriculum"}
+                    <Typography className="text-[9px] font-black text-slate-900 uppercase tracking-widest leading-none">
+                      {selectedSemester ? `Explore ${selectedSemester}` : "Full Curriculum"}
                     </Typography>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                      <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        {selectedSemester ? "Viewing Filtered Content" : "System Status: Optimal"}
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
+                      <Typography className="text-[6px] font-black text-slate-400 uppercase tracking-widest">
+                        Status: Optimal
                       </Typography>
                     </div>
                   </div>
@@ -130,42 +170,30 @@ export default function Dashboard({ onMenuClick }) {
                {selectedSemester && (
                  <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
                     <Button 
-                      onClick={() => setSelectedSemester(null)}
-                      startIcon={<MdArrowBack />}
-                      className="!rounded-xl !bg-white !border !border-slate-200 !text-slate-600 !font-black !text-[11px] !px-5 !py-2.5 uppercase tracking-widest hover:!bg-slate-50 transition-all shadow-sm"
+                      onClick={handleBack}
+                      startIcon={<MdArrowBack size={10} />}
+                      className="!rounded-lg !bg-white !border !border-slate-200 !text-slate-600 !font-black !text-[7px] !px-2 !py-1 uppercase tracking-widest hover:!bg-slate-50 transition-all"
                     >
-                      Back to Semesters
+                      Back
                     </Button>
                  </motion.div>
                )}
             </div>
 
-            <div className="mt-4">
+            <div className="mt-1">
                <AnimatePresence mode="wait">
-                  {selectedSemester ? (
-                    <motion.div
-                      key="labs"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <LabGrid labs={filteredLabs} onLabClick={() => {}} />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="semesters"
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <SemesterGrid 
-                        semesters={semesters} 
-                        onSemesterClick={(name) => setSelectedSemester(name)} 
-                      />
-                    </motion.div>
-                  )}
+                  <motion.div
+                    key={selectedSemester || 'all'}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <LabGrid 
+                      labs={selectedSemester ? filteredLabs : labs} 
+                      onLabClick={() => {}} 
+                    />
+                  </motion.div>
                </AnimatePresence>
             </div>
           </div>

@@ -38,6 +38,14 @@ export async function runFile(payload) {
   });
 }
 
+export async function deleteFile(path) {
+  const sessionId = getActiveSessionId();
+  return apiRequest(`/files?path=${encodeURIComponent(path)}`, {
+    method: 'DELETE',
+    headers: { 'x-session-id': sessionId },
+  });
+}
+
 export function connectTerminalStream({ sessionId, runId, onMessage }) {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   // Use current window host (with port 8080) for websocket

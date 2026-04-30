@@ -11,14 +11,22 @@ import {
   Avatar
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdExpandMore } from 'react-icons/md';
-import { motion } from 'motion/react';
+import { MdExpandMore, MdLayers, MdSchool } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import { SIDEBAR_ITEMS } from '../constants/sidebar';
+import { useLabStore } from '../store/labStore';
 
 const SidebarContent = ({ isCollapsed = false }) => {
   const [expandedItems, setExpandedItems] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
+  const { labs } = useLabStore();
+
+  // Get unique semesters from labs
+  const semesters = React.useMemo(() => {
+    const sems = [...new Set(labs.map(l => l.semester || 'Other'))];
+    return sems.sort();
+  }, [labs]);
 
   const toggleExpand = (label) => {
     setExpandedItems(prev => (prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]));
@@ -27,6 +35,9 @@ const SidebarContent = ({ isCollapsed = false }) => {
   const wrapperClasses =
     'h-full flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ' +
     (isCollapsed ? 'w-[70px] md:w-[82px]' : 'w-[260px] md:w-[290px]');
+
+  const searchParams = new URLSearchParams(location.search);
+  const activeSemester = searchParams.get('semester');
 
   return (
     <Box className={wrapperClasses}
@@ -46,8 +57,9 @@ const SidebarContent = ({ isCollapsed = false }) => {
       </Box>
 
       <List className="flex-1 mt-4 overflow-y-auto px-3 pb-20 custom-scrollbar space-y-1">
+        {/* Static Items from Constants */}
         {SIDEBAR_ITEMS.map((item, idx) => {
-          const isActive = item.path ? (item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)) : false;
+          const isActive = item.path ? (item.path === '/' ? (location.pathname === '/' && !activeSemester) : location.pathname.startsWith(item.path)) : false;
           const isExpanded = expandedItems.includes(item.label);
 
           const itemClass =
@@ -84,11 +96,46 @@ const SidebarContent = ({ isCollapsed = false }) => {
                       primaryTypographyProps={{ className: 'text-[13px] font-bold tracking-wide transition-colors ' + (isActive ? 'text-red-700' : 'text-slate-500 group-hover:text-slate-900') }}
                     />
                   )}
+                </ListItemButton>
+              </ListItem>
+            </Box>
+          );
+        })}
 
-                  {!isCollapsed && item.hasSub && (
+        {/* Dynamic Courses Section */}
+        {!isCollapsed && (
+          <Box className="mt-6 mb-2 px-4">
+             <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Courses</Typography>
+          </Box>
+        )}
+
+        {/* Example: MCA Grouping */}
+        {(() => {
+          // In a real app, you'd group labs by lab.course
+          // For now, we'll put all semesters under "MCA" as requested
+          const courseLabel = "MCA";
+          const isCourseExpanded = expandedItems.includes(courseLabel);
+          
+          return (
+            <Box className="group/item relative mb-1.5">
+               <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => toggleExpand(courseLabel)}
+                  className={'rounded-[14px] px-4 py-2.5 transition-all duration-300 ' + (isCourseExpanded ? 'bg-slate-50 text-slate-900' : 'text-slate-500 hover:bg-slate-50') + (isCollapsed ? ' justify-center px-1' : '')}
+                >
+                  <ListItemIcon sx={{ color: isCourseExpanded ? '#dc2626' : 'inherit', minWidth: isCollapsed ? 0 : 38 }}>
+                    <MdSchool size={20} />
+                  </ListItemIcon>
+                  {!isCollapsed && (
+                    <ListItemText
+                      primary={courseLabel}
+                      primaryTypographyProps={{ className: 'text-[13px] font-bold tracking-wide' }}
+                    />
+                  )}
+                  {!isCollapsed && (
                     <Box
-                      className={(isExpanded ? 'text-red-600 ' : 'text-slate-500 ') + 'transition-all duration-300 group-hover:text-red-500'}
-                      sx={{ transform: isExpanded ? 'rotate(180deg)' : 'none', display: 'flex', alignItems: 'center' }}
+                      className={(isCourseExpanded ? 'text-red-600 ' : 'text-slate-500 ') + 'transition-all duration-300'}
+                      sx={{ transform: isCourseExpanded ? 'rotate(180deg)' : 'none', display: 'flex', alignItems: 'center' }}
                     >
                       <MdExpandMore size={18} />
                     </Box>
@@ -96,22 +143,23 @@ const SidebarContent = ({ isCollapsed = false }) => {
                 </ListItemButton>
               </ListItem>
 
-              <Collapse in={!isCollapsed && item.hasSub && isExpanded} timeout={300} unmountOnExit>
-                <Box className="pl-[3.2rem] pr-2 py-1.5 mt-1 space-y-1 relative before:absolute before:left-[22px] before:top-0 before:bottom-0 before:w-[1px] before:bg-slate-200">
-                  {item.subItems?.map((sub, sIdx) => {
-                    const isSubActive = location.pathname === sub.path;
-                    const SubIcon = sub.icon;
+              <Collapse in={!isCollapsed && isCourseExpanded} timeout={300} unmountOnExit>
+                <Box className="pl-10 pr-2 py-1 space-y-1 relative before:absolute before:left-[24px] before:top-0 before:bottom-2 before:w-[1.5px] before:bg-slate-100 before:rounded-full">
+                  {semesters.map((sem, sIdx) => {
+                    const isActive = activeSemester === sem;
                     return (
                       <ListItemButton
-                        key={sIdx}
-                        onClick={() => { if (sub.path) navigate(sub.path); }}
-                        className={'py-2 px-3 rounded-[10px] relative ' + (isSubActive ? 'bg-red-50 text-red-600' : 'text-slate-500 hover:bg-slate-50 hover:text-red-600') + ' transition-all duration-200'}
+                        key={`sem-${sIdx}`}
+                        onClick={() => navigate(`/?semester=${encodeURIComponent(sem)}`)}
+                        className={'py-1.5 px-3 rounded-[10px] relative transition-all duration-200 ' + (isActive ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-500 hover:text-red-600')}
                       >
-                        {isSubActive && <div className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-red-600 shadow-sm" />}
-                        <ListItemIcon sx={{ color: isSubActive ? '#ef4444' : 'inherit', minWidth: 26 }}>
-                          {SubIcon && <SubIcon size={16} />}
-                        </ListItemIcon>
-                        <ListItemText primary={sub.label} primaryTypographyProps={{ className: 'text-[12px] font-semibold tracking-wide' }} />
+                        {isActive && <div className="absolute left-[-17px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-red-600 shadow-sm" />}
+                        <ListItemText 
+                          primary={sem} 
+                          primaryTypographyProps={{ 
+                            className: 'text-[11px] font-semibold tracking-wide ' + (isActive ? 'text-red-600' : 'text-slate-500')
+                          }} 
+                        />
                       </ListItemButton>
                     );
                   })}
@@ -119,7 +167,7 @@ const SidebarContent = ({ isCollapsed = false }) => {
               </Collapse>
             </Box>
           );
-        })}
+        })()}
       </List>
 
       <Box className="p-4 border-t border-slate-100 bg-white/40 backdrop-blur-sm">
