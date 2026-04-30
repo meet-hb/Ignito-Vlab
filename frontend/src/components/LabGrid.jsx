@@ -71,6 +71,18 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
   };
 
   const isLabActive = (labId) => !!activeSessions[labId];
+  const [showWarningModal, setShowWarningModal] = React.useState(false);
+
+  const handleStartClick = (e, labId) => {
+    // Check if there's any active session that isn't the current lab
+    const otherActiveSession = Object.keys(activeSessions).find(id => id !== labId);
+    
+    if (otherActiveSession) {
+      e.preventDefault();
+      setShowWarningModal(true);
+      return;
+    }
+  };
 
   return (
     <>
@@ -165,7 +177,10 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
                 ) : (
                   <Link 
                     to={`/admin/compute/rdp?labId=${lab.id}&app=vscode`}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartClick(e, lab.id);
+                    }}
                     style={{ textDecoration: 'none' }}
                   >
                     <Button 
@@ -224,8 +239,37 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
         </Box>
       </Box>
     </Dialog>
+
+    {/* Multiple Lab Warning Modal */}
+    <Dialog 
+      open={showWarningModal} 
+      onClose={() => setShowWarningModal(false)}
+      PaperProps={{
+        className: "bg-[#1e1e1e] border border-white/10 rounded-2xl p-2",
+        style: { backgroundColor: '#1e1e1e', borderRadius: '20px', color: 'white' }
+      }}
+    >
+      <Box className="p-6 flex flex-col items-center gap-4 text-center max-w-sm">
+        <Box className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 mb-2">
+          <MdWarning size={32} />
+        </Box>
+        <div className="space-y-2">
+          <Typography className="text-white text-xl font-black uppercase tracking-tighter">Active Session Found</Typography>
+          <Typography className="text-slate-400 text-sm font-medium">First stop lab after try to start this lab.</Typography>
+        </div>
+        <Box className="flex gap-3 w-full mt-6">
+          <Button 
+            onClick={() => setShowWarningModal(false)}
+            variant="contained"
+            className="flex-1 !py-3 !rounded-xl !bg-slate-700 hover:!bg-slate-600 !text-white !font-black !text-[11px] uppercase tracking-widest"
+          >
+            Understood
+          </Button>
+        </Box>
+      </Box>
+    </Dialog>
   </>
-  );
+);
 };
 
 export default LabGrid;
