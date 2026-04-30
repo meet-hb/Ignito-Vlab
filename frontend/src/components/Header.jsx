@@ -94,8 +94,8 @@ const Header = ({ onMenuClick, title, onBack }) => {
             </IconButton>
           )}
 
-          <div className="flex items-center gap-3 bg-white border border-slate-200/80 rounded-2xl px-3 py-1.5 shadow-sm">
-            <div className="bg-red-50 p-1 rounded-lg">
+          <div className="flex items-center gap-3 py-1.5">
+            <div className="p-1 rounded-lg">
               <img src="/assets/logo.png" alt="VLabs" className="h-6 w-6 object-contain" />
             </div>
             <Typography variant="subtitle2" className="font-black text-slate-900 tracking-tight text-[13px] whitespace-nowrap">
@@ -176,7 +176,7 @@ const Header = ({ onMenuClick, title, onBack }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleClick}
-            className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl border border-slate-200/60 bg-white shadow-sm cursor-pointer hover:shadow-md hover:border-red-100 transition-all"
+            className="flex items-center gap-3 cursor-pointer transition-all"
           >
             <div className="relative">
                <Avatar className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-tr from-red-600 to-red-400 border-2 border-white text-white font-black text-xs">
