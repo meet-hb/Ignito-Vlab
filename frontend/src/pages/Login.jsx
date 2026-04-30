@@ -83,7 +83,7 @@ export default function Login() {
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-rose-200/40 blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-200/30 blur-[120px]" />
         <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-indigo-100/40 blur-[100px]" />
-        
+
         {/* Subtle Technical Grid for Light Theme */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.1]" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -138,7 +138,7 @@ export default function Login() {
             {/* Brand Red Overlay */}
             <div className="absolute inset-0 bg-gradient-to-tr from-red-600/90 via-red-900/40 to-slate-900/20" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(251,113,133,0.3),transparent_70%)]" />
-            
+
             <motion.div
               animate={{
                 y: [0, 30, 0],
@@ -213,7 +213,7 @@ export default function Login() {
 
             {/* Technical Grid Pattern - More Visible */}
             <div className="absolute inset-0 z-1 opacity-[0.07] pointer-events-none"
-              style={{ backgroundImage: 'linear-gradient(#fb7185 1.5px, transparent 1.5px), linear-gradient(90deg, #fb7185 1.5px, transparent 1.5px)', backgroundSize: '40px 40px' }} />
+              style={{ backgroundImage: 'linear-gradient(#fb7185 1.5px, transparent 1.5px), linear-gradient(180deg, #fb7185 1.5px, transparent 1.5px)', backgroundSize: '40px 40px' }} />
 
             {/* Floating Decorative UI Elements */}
             <motion.div
