@@ -255,8 +255,8 @@ export default function Login() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
               >
-                <Typography variant="h4" className="font-black text-slate-900 tracking-tight mb-3">Welcome Back</Typography>
-                <Typography className="text-slate-500 font-medium mb-12 leading-relaxed">
+                <Typography variant="h4" className="font-black text-slate-900 tracking-tight mb-6">Welcome Back</Typography>
+                <Typography className="text-slate-500 font-medium mb-16 leading-relaxed">
                   Enter your credentials to access your workspace
                 </Typography>
               </motion.div>
@@ -279,7 +279,7 @@ export default function Login() {
                 )}
               </AnimatePresence>
 
-              <form onSubmit={handleLogin} className="space-y-6">
+              <form onSubmit={handleLogin} className="space-y-6 mt-4">
                 <Box>
                   <Typography className="text-[13px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Email Identity</Typography>
                   <TextField
@@ -354,13 +354,13 @@ export default function Login() {
                     variant="contained"
                     disabled={isLoading}
                     endIcon={!isLoading && <MdArrowForward />}
-                    className="!rounded-2xl !py-4.5 !text-white !font-black !text-sm !tracking-widest !bg-slate-900 hover:!bg-slate-800 !shadow-2xl !shadow-slate-200 !transition-all !mt-4 h-14"
+                    className="!rounded-2xl !py-4.5 !text-white !font-black !text-sm !tracking-widest !bg-slate-900 hover:!bg-slate-800 !shadow-2xl !shadow-slate-200 !transition-all !mt-2 h-14"
                   >
                     {isLoading ? 'VERIFYING...' : 'SIGN INTO DASHBOARD'}
                   </Button>
                 </motion.div>
 
-                <Typography className="text-center text-xs text-slate-400 font-medium pt-8">
+                <Typography className="text-center text-xs text-slate-400 font-medium pt-6">
                   Secured by Ignito Infrastructure Cloud.
                 </Typography>
               </form>
