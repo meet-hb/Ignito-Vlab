@@ -12,8 +12,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import { motion } from 'motion/react';
+import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdArrowForward } from 'react-icons/md';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
@@ -34,7 +34,7 @@ export default function Login() {
     if (!loginId.trim() || !password.trim()) {
       setErrorMessage('Please enter both email and password.');
       setError(true);
-      setTimeout(() => setError(false), 3000);
+      setTimeout(() => setError(false), 5000);
       return;
     }
 
@@ -44,194 +44,327 @@ export default function Login() {
     } else {
       setErrorMessage(result.message || 'Unable to sign in. Please try again.');
       setError(true);
-      setTimeout(() => setError(false), 3000);
+      setTimeout(() => setError(false), 5000);
     }
   };
 
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
-      borderRadius: '6px',
-      bgcolor: '#ffffff',
-      '& input': {
-        backgroundColor: 'transparent',
-      },
-      '& input:-webkit-autofill': {
-        WebkitBoxShadow: '0 0 0 100px #ffffff inset',
-        WebkitTextFillColor: '#0f172a',
-        caretColor: '#0f172a',
-        borderRadius: '6px',
-      },
+      borderRadius: '16px',
+      bgcolor: 'rgba(255, 255, 255, 0.6)',
+      backdropFilter: 'blur(8px)',
+      transition: 'all 0.3s ease',
       '& fieldset': {
-        borderColor: '#e5e7eb',
+        borderColor: 'rgba(226, 232, 240, 0.8)',
       },
       '&:hover fieldset': {
-        borderColor: '#cbd5e1',
+        borderColor: 'rgba(251, 113, 133, 0.4)',
       },
-      '&.Mui-focused fieldset': {
-        borderColor: '#fb7185',
+      '&.Mui-focused': {
+        bgcolor: '#ffffff',
+        '& fieldset': {
+          borderColor: '#fb7185',
+          borderWidth: '2px',
+        },
+        boxShadow: '0 10px 25px -5px rgba(251, 113, 133, 0.1), 0 8px 10px -6px rgba(251, 113, 133, 0.1)',
       },
     },
+    '& .MuiInputBase-input': {
+      fontSize: '15px',
+      fontWeight: 500,
+      padding: '16px 14px',
+    }
   };
 
   return (
-    <Box className="min-h-screen bg-white p-3 sm:p-4 md:p-6 font-sans flex items-center justify-center">
+    <Box className="min-h-screen bg-[#f1f5f9] font-sans flex items-center justify-center relative overflow-hidden">
+      {/* Premium Light Background UI */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-rose-200/40 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-200/30 blur-[120px]" />
+        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-indigo-100/40 blur-[100px]" />
+        
+        {/* Subtle Technical Grid for Light Theme */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.1]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#64748b" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+
+        {/* Floating Particles - Darker for visibility */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            animate={{
+              y: [0, -80, 0],
+              x: [0, Math.random() * 40 - 20, 0],
+              opacity: [0, 0.2, 0]
+            }}
+            transition={{
+              duration: 12 + Math.random() * 8,
+              repeat: Infinity,
+              delay: Math.random() * 5
+            }}
+            className="absolute w-1.5 h-1.5 bg-slate-400 rounded-full blur-[1px]"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="w-full"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+        className="w-full max-w-[1200px] px-4 z-10"
       >
         <Paper
           elevation={0}
-          className="relative overflow-hidden rounded-[22px] sm:rounded-[28px] border border-slate-100 bg-white min-h-[720px]"
+          className="overflow-hidden rounded-[40px] shadow-[0_48px_100px_rgba(15,23,42,0.15)] border border-white flex flex-col lg:flex-row min-h-[700px] bg-white/40 backdrop-blur-xl"
         >
-          <Box className="grid grid-cols-1 lg:grid-cols-[0.47fr_0.53fr] min-h-[calc(100vh-24px)] sm:min-h-[calc(100vh-32px)] md:min-h-[calc(100vh-48px)]">
-            <Box className="relative min-h-[320px] sm:min-h-[360px] lg:min-h-full overflow-hidden mx-3 mt-3 lg:mx-0 lg:mt-0 rounded-[18px] lg:rounded-none">
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(180deg, rgba(168,28,52,0.55), rgba(142,18,44,0.78)), url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=80")',
-                }}
-              />
+          {/* Left Side: Educational Hero */}
+          <Box className="lg:w-1/2 relative min-h-[400px] lg:min-h-full overflow-hidden">
+            <div
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] hover:scale-110"
+              style={{
+                backgroundImage: 'url("/assets/vlab-premium-bg.png")',
+              }}
+            />
+            {/* Brand Red Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-red-600/90 via-red-900/40 to-slate-900/20" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(251,113,133,0.3),transparent_70%)]" />
+            
+            <motion.div
+              animate={{
+                y: [0, 30, 0],
+                x: [0, 20, 0]
+              }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute bottom-[20%] left-[5%] w-24 h-24 bg-red-500/10 border border-white/5 rounded-full backdrop-blur-2xl hidden lg:block"
+            />
 
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.18))]" />
-
-              <div className="relative z-10 h-full flex flex-col justify-between p-5 sm:p-6 md:p-8 text-white">
-                <div className="flex items-center gap-3">
-                  <Box className="w-9 h-9 rounded-lg bg-white/15 border border-white/15 backdrop-blur-md flex items-center justify-center">
-                    <img src="/assets/logo.png" alt="Vlab" className="w-5 h-5 object-contain" />
-                  </Box>
-                  <Typography className="text-sm font-bold tracking-wide">Ignito Vlab</Typography>
-                </div>
-
-                <div className="pt-14 sm:pt-20 lg:pt-0">
-                  <Typography className="text-[52px] sm:text-3xl md:text-4xl font-semibold tracking-tight mb-3 max-w-[320px] sm:max-w-none">
-                    Welcome to Ignito Vlab
-                  </Typography>
-                  <Typography className="text-sm md:text-base text-white/85 max-w-md leading-7">
-                    Login to access your account and manage labs, instances, and remote desktop sessions from one place.
-                  </Typography>
-                </div>
-
-                <Typography className="text-[11px] text-white/75">
-                  Login to access your account
-                </Typography>
-              </div>
-            </Box>
-
-            <Box className="relative bg-white overflow-hidden flex items-center justify-center px-3 pb-3 pt-4 sm:px-4 sm:pb-4 sm:pt-5 md:p-10">
-              <div className="absolute right-[-120px] top-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full border border-rose-100" />
-              <div className="absolute right-[-70px] top-1/2 -translate-y-1/2 w-[410px] h-[410px] rounded-full border border-rose-100/80" />
-              <div className="absolute right-[10px] top-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border-[28px] border-rose-100/90" />
-              <div className="absolute right-[118px] top-[145px] w-4 h-4 rounded-full bg-gradient-to-br from-red-500 to-rose-700 shadow-[0_8px_20px_rgba(190,24,93,0.35)]" />
-              <div className="absolute right-[170px] bottom-[150px] w-4 h-4 rounded-full bg-gradient-to-br from-red-500 to-rose-700 shadow-[0_8px_20px_rgba(190,24,93,0.35)]" />
-
-              <Paper
-                elevation={0}
-                className="relative z-10 w-full max-w-[500px] rounded-[20px] bg-white/95 shadow-[0_24px_60px_rgba(15,23,42,0.12)] border border-slate-100 px-6 py-8 sm:px-8 sm:py-9 md:px-10 md:py-10"
+            <div className="relative z-10 h-full flex flex-col justify-between p-10 md:p-14 text-white">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex items-center gap-4"
               >
-                <Typography className="text-center text-[28px] font-semibold text-slate-800 mb-9">
-                  Login
+                <Box className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/30 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                  <img src="/assets/logo-icon.png" alt="VL" className="w-9 h-9 object-contain" />
+                </Box>
+                <div>
+                  <Typography className="text-xl font-black tracking-tighter leading-none">IGNITO</Typography>
+                  <Typography className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-400 mt-1">Virtual Labs</Typography>
+                </div>
+              </motion.div>
+
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Typography variant="h1" className="text-4xl md:text-6xl font-black tracking-tighter leading-[1.1] mb-6">
+                    IgnitoLearn <span className="text-rose-500">Virtual</span> <br />Laboratory.
+                  </Typography>
+                  <Typography className="text-lg text-slate-200/90 leading-relaxed max-w-md font-medium">
+                    Experience seamless infrastructure management and interactive learning in our state-of-the-art virtual environment.
+                  </Typography>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex items-center gap-8 pt-8"
+                >
+                  <div className="text-center">
+                    <Typography className="text-2xl font-black text-white drop-shadow-md">450+</Typography>
+                    <Typography className="text-[10px] uppercase font-bold tracking-widest text-white/70 mt-1 drop-shadow-sm">Active Labs</Typography>
+                  </div>
+                  <div className="w-px h-10 bg-white/20" />
+                  <div className="text-center">
+                    <Typography className="text-2xl font-black text-white drop-shadow-md">99.9%</Typography>
+                    <Typography className="text-[10px] uppercase font-bold tracking-widest text-white/70 mt-1 drop-shadow-sm">Uptime Rate</Typography>
+                  </div>
+                </motion.div>
+              </div>
+
+              <Typography className="text-xs text-white/50 font-medium drop-shadow-sm">
+                © 2026 IgnitoLearn. Redefining Digital Education.
+              </Typography>
+            </div>
+          </Box>
+
+          {/* Right Side: Login Form */}
+          <Box className="lg:w-1/2 flex items-center justify-center p-8 md:p-16 lg:p-20 relative overflow-hidden bg-white">
+            {/* Rich Mesh Gradient Background */}
+            <div className="absolute inset-0 z-0">
+              <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-rose-100/60 blur-[100px] animate-pulse" />
+              <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-100/40 blur-[100px]" />
+              <div className="absolute top-[40%] left-[20%] w-[40%] h-[40%] rounded-full bg-indigo-50/50 blur-[80px]" />
+            </div>
+
+            {/* Technical Grid Pattern - More Visible */}
+            <div className="absolute inset-0 z-1 opacity-[0.07] pointer-events-none"
+              style={{ backgroundImage: 'linear-gradient(#fb7185 1.5px, transparent 1.5px), linear-gradient(90deg, #fb7185 1.5px, transparent 1.5px)', backgroundSize: '40px 40px' }} />
+
+            {/* Floating Decorative UI Elements */}
+            <motion.div
+              animate={{
+                y: [0, -25, 0],
+                rotate: [0, 45, 0]
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+              className="absolute top-[15%] right-[15%] w-20 h-20 border-2 border-rose-200/30 rounded-3xl z-1 hidden lg:block"
+            />
+
+            <motion.div
+              animate={{
+                y: [0, 30, 0],
+                x: [0, 20, 0]
+              }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute bottom-[15%] left-[10%] w-32 h-32 border border-blue-200/20 rounded-full z-1 hidden lg:block"
+            >
+              <div className="absolute inset-4 border border-blue-200/10 rounded-full animate-spin-slow" />
+            </motion.div>
+
+            {/* Floating Icons - More Pronounced */}
+            <motion.div
+              animate={{ y: [0, -20, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-1/4 left-10 text-rose-300 opacity-40 hidden xl:block"
+            >
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+                <path d="M2 17L12 22L22 17" />
+                <path d="M2 12L12 17L22 12" />
+              </svg>
+            </motion.div>
+
+            <div className="w-full max-w-[420px] relative z-10">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Typography variant="h4" className="font-black text-slate-900 tracking-tight mb-3">Welcome Back</Typography>
+                <Typography className="text-slate-500 font-medium mb-12 leading-relaxed">
+                  Enter your credentials to access your workspace
                 </Typography>
+              </motion.div>
 
-                <Fade in={error}>
-                  <Box>
-                    {error && (
-                      <Alert severity="error" className="rounded-xl mb-4">
-                        {errorMessage}
-                      </Alert>
-                    )}
-                  </Box>
-                </Fade>
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-6 overflow-hidden"
+                  >
+                    <Alert
+                      severity="error"
+                      className="rounded-[18px] border border-rose-100 bg-rose-50/50 text-rose-700"
+                    >
+                      {errorMessage}
+                    </Alert>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                <form onSubmit={handleLogin} className="space-y-5">
-                  <Box>
-                    <Typography className="text-[14px] font-medium text-slate-500 mb-2.5">Email</Typography>
-                    <TextField
-                      fullWidth
-                      placeholder="Enter your email"
-                      value={loginId}
-                      onChange={(event) => setLoginId(event.target.value)}
-                      sx={textFieldStyles}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <MdEmail size={18} className="text-slate-400" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Box>
+              <form onSubmit={handleLogin} className="space-y-6">
+                <Box>
+                  <Typography className="text-[13px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Email Identity</Typography>
+                  <TextField
+                    fullWidth
+                    placeholder="admin@ignito.com"
+                    value={loginId}
+                    onChange={(e) => setLoginId(e.target.value)}
+                    sx={textFieldStyles}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start" className="ml-2">
+                          <MdEmail size={20} className="text-slate-400" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Box>
 
-                  <Box>
-                    <Typography className="text-[14px] font-medium text-slate-500 mb-2.5">Password</Typography>
-                    <TextField
-                      fullWidth
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      sx={textFieldStyles}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <MdLock size={18} className="text-slate-400" />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton size="small" onClick={() => setShowPassword((prev) => !prev)}>
-                              {showPassword ? <MdVisibilityOff size={18} className="text-rose-400" /> : <MdVisibility size={18} className="text-rose-400" />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Box>
+                <Box>
+                  <Typography className="text-[13px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Password</Typography>
+                  <TextField
+                    fullWidth
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    sx={textFieldStyles}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start" className="ml-2">
+                          <MdLock size={20} className="text-slate-400" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end" className="mr-1">
+                          <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                            {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Box>
 
+                <div className="flex items-center justify-between px-1">
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={keepLoggedIn}
+                        onChange={(e) => setKeepLoggedIn(e.target.checked)}
+                        sx={{
+                          color: '#e2e8f0',
+                          '&.Mui-checked': { color: '#fb7185' },
+                          '& .MuiSvgIcon-root': { fontSize: 20 }
+                        }}
+                      />
+                    }
+                    label={<span className="text-sm font-bold text-slate-500">Remember me</span>}
+                  />
+                  <Typography className="text-sm font-bold text-rose-500 hover:text-rose-600 cursor-pointer transition-colors">
+                    Reset Password?
+                  </Typography>
+                </div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button
                     fullWidth
                     type="submit"
                     variant="contained"
                     disabled={isLoading}
-                    className="!mt-7 !rounded-[6px] !py-3.5 !text-white !font-semibold !text-sm !tracking-[0.22em] !bg-[#ff6b5f] hover:!bg-[#f85b4d] shadow-none"
+                    endIcon={!isLoading && <MdArrowForward />}
+                    className="!rounded-2xl !py-4.5 !text-white !font-black !text-sm !tracking-widest !bg-slate-900 hover:!bg-slate-800 !shadow-2xl !shadow-slate-200 !transition-all !mt-4 h-14"
                   >
-                    {isLoading ? 'LOGGING IN...' : 'LOG IN'}
+                    {isLoading ? 'VERIFYING...' : 'SIGN INTO DASHBOARD'}
                   </Button>
+                </motion.div>
 
-                  <div className="flex flex-col items-center gap-2 pt-2">
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={keepLoggedIn}
-                          onChange={(event) => setKeepLoggedIn(event.target.checked)}
-                          size="small"
-                          sx={{
-                            color: '#d1d5db',
-                            '&.Mui-checked': { color: '#ff6b5f' },
-                            padding: '6px',
-                          }}
-                        />
-                      }
-                      label={<span className="text-[13px] text-slate-500">Keep me logged in</span>}
-                      className="m-0"
-                    />
-
-                    <button
-                      type="button"
-                      className="text-[13px] text-[#ff6b5f] hover:text-[#f85b4d] transition-colors"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                </form>
-              </Paper>
-
-              <Typography className="absolute bottom-4 right-1/2 translate-x-1/2 sm:translate-x-0 sm:right-8 text-[10px] text-slate-400 text-center whitespace-nowrap">
-                Copyright 2026. All rights reserved.
-              </Typography>
-            </Box>
+                <Typography className="text-center text-xs text-slate-400 font-medium pt-8">
+                  Secured by Ignito Infrastructure Cloud.
+                </Typography>
+              </form>
+            </div>
           </Box>
         </Paper>
       </motion.div>

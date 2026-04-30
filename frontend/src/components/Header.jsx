@@ -225,22 +225,7 @@ const Header = ({ onMenuClick, title, onBack }) => {
             Logout Session
           </Button>
           
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <Button
-              variant="outlined"
-              startIcon={<MdSecurity size={18} />}
-              className="!border-slate-200 !text-slate-600 hover:!bg-slate-50 !rounded-2xl !py-2.5 !normal-case !font-bold !text-[11px]"
-            >
-              Security
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<MdSupportAgent size={18} />}
-              className="!border-slate-200 !text-slate-600 hover:!bg-slate-50 !rounded-2xl !py-2.5 !normal-case !font-bold !text-[11px]"
-            >
-              Support
-            </Button>
-          </div>
+
         </div>
       </Menu>
     </Box>
