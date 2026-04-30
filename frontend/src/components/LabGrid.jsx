@@ -114,24 +114,20 @@ const LabGrid = ({ onLabClick, labs: labsProp }) => {
                 </Typography>
                 <Typography className="text-slate-400 text-sm mt-1 font-medium">Standard Cloud Laboratory Infrastructure</Typography>
                 
-                <div className="flex items-center gap-6 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
-                      <MdAccessTime size={16} />
-                    </div>
-                    <div>
-                      <Typography className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Duration</Typography>
-                      <Typography className="text-xs font-bold text-slate-700 mt-0.5">{lab.durationMinutes} Mins</Typography>
+                <div className="flex items-center gap-3 mt-3">
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 rounded-lg border border-slate-100 transition-colors group-hover:bg-white group-hover:border-slate-200">
+                    <MdAccessTime size={14} className="text-slate-400 group-hover:text-red-500 transition-colors" />
+                    <div className="flex items-center gap-1.5">
+                      <Typography className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Duration:</Typography>
+                      <Typography className="text-[11px] font-bold text-slate-700">{lab.durationMinutes} Mins</Typography>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
-                      <MdStars size={16} />
-                    </div>
-                    <div>
-                      <Typography className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Credits</Typography>
-                      <Typography className="text-xs font-bold text-slate-700 mt-0.5">{lab.credits} Credits</Typography>
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 rounded-lg border border-slate-100 transition-colors group-hover:bg-white group-hover:border-slate-200">
+                    <MdStars size={14} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
+                    <div className="flex items-center gap-1.5">
+                      <Typography className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Credits:</Typography>
+                      <Typography className="text-[11px] font-bold text-slate-700">{lab.credits}</Typography>
                     </div>
                   </div>
                 </div>

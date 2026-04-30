@@ -64,20 +64,20 @@ export default function Dashboard({ onMenuClick }) {
                 <motion.div 
                   key={i} 
                   whileHover={{ y: -5 }}
-                  className="relative overflow-hidden frosted-card p-5 flex items-center justify-between group transition-all duration-300 border border-white min-h-[110px] min-w-[240px]"
+                  className="relative overflow-hidden frosted-card p-6 flex items-center justify-between gap-8 group transition-all duration-300 border border-white min-h-[110px] min-w-[280px]"
                 >
-                  <div className="relative z-10">
-                    <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{stat.label}</Typography>
-                    <div className="flex items-baseline gap-1">
-                      <Typography className={"text-2xl font-black tracking-tight " + stat.color}>
+                  <div className="relative z-10 flex-1">
+                    <Typography className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1 whitespace-nowrap">{stat.label}</Typography>
+                    <div className="flex items-baseline gap-2">
+                      <Typography className={"text-3xl font-black tracking-tight " + stat.color}>
                         {isLoading ? "..." : stat.value}
                       </Typography>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Live</span>
                     </div>
                   </div>
 
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 ${stat.bg}`}>
-                     <stat.icon size={24} className={stat.color} />
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 shrink-0 ${stat.bg}`}>
+                     <stat.icon size={28} className={stat.color} />
                   </div>
                 </motion.div>
               ))}
