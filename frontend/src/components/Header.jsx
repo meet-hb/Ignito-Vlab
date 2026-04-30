@@ -93,21 +93,11 @@ const Header = ({ onMenuClick, title, onBack }) => {
               <MdArrowBack size={20} />
             </IconButton>
           )}
-
-          <div className="flex items-center gap-3 py-1.5">
-            <div className="p-1 rounded-lg">
-              <img src="/assets/logo.png" alt="VLabs" className="h-6 w-6 object-contain" />
-            </div>
-            <Typography variant="subtitle2" className="font-black text-slate-900 tracking-tight text-[13px] whitespace-nowrap">
-              Ignito Vlab
+          <div className="flex items-center gap-2">
+            <img src="/assets/logo-icon.png" alt="VL" className="h-8 w-8 object-contain lg:hidden" />
+            <Typography variant="h4" className="font-black text-slate-900 tracking-tighter uppercase whitespace-nowrap text-xl md:text-2xl lg:text-3xl">
+              Ignito VLab
             </Typography>
-          </div>
-
-          <div className="hidden lg:flex items-center gap-2 text-slate-300">
-             <span className="text-xl font-light">/</span>
-             <Typography className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap truncate max-w-[200px]">
-               {title}
-             </Typography>
           </div>
         </div>
 

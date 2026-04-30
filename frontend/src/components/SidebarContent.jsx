@@ -32,12 +32,16 @@ const SidebarContent = ({ isCollapsed = false }) => {
     <Box className={wrapperClasses}
       sx={{ background: "rgba(255, 255, 255, 0.95)" }}
     >
-      <Box className="p-5 pb-3 flex items-center gap-3 justify-between">
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 w-full">
-          <Box className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200">
-            <img src="/assets/logo.png" alt="logo" className="w-7 h-7 object-contain" />
+      <Box className="px-2 py-1 flex items-center gap-3 justify-between">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 w-full">
+          <Box className={isCollapsed ? "w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-slate-100" : "w-full h-auto flex items-center justify-center p-2"}>
+            <img
+              src={isCollapsed ? "/assets/logo-icon.png" : "/assets/logo.png"}
+              alt="logo"
+              className={isCollapsed ? "w-7 h-7 object-contain" : "w-[200px] h-auto object-contain"}
+            />
           </Box>
-          {!isCollapsed && <Typography className="font-black text-slate-900 tracking-tight text-[15px] truncate">Ignito Vlab</Typography>}
+
         </motion.div>
       </Box>
 
@@ -64,12 +68,12 @@ const SidebarContent = ({ isCollapsed = false }) => {
                     }
                   }}
                   className={itemClass}
-                  sx={{ 
+                  sx={{
                     borderLeft: `3px solid ${isActive ? '#dc2626' : 'transparent'}`,
                   }}
                 >
                   {isActive && <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent opacity-50 pointer-events-none" />}
-                  
+
                   <ListItemIcon sx={{ color: isActive ? '#dc2626' : 'inherit', minWidth: isCollapsed ? 0 : 38, transition: 'color 0.3s ease' }} className="group-hover:text-red-500">
                     {item.icon && (() => { const Icon = item.icon; return <Icon size={22} />; })()}
                   </ListItemIcon>
@@ -82,7 +86,7 @@ const SidebarContent = ({ isCollapsed = false }) => {
                   )}
 
                   {!isCollapsed && item.hasSub && (
-                    <Box 
+                    <Box
                       className={(isExpanded ? 'text-red-600 ' : 'text-slate-500 ') + 'transition-all duration-300 group-hover:text-red-500'}
                       sx={{ transform: isExpanded ? 'rotate(180deg)' : 'none', display: 'flex', alignItems: 'center' }}
                     >
@@ -119,7 +123,7 @@ const SidebarContent = ({ isCollapsed = false }) => {
       </List>
 
       <Box className="p-4 border-t border-slate-100 bg-white/40 backdrop-blur-sm">
-        <motion.div 
+        <motion.div
           whileHover={{ x: 5 }}
           className="flex items-center gap-3 p-2 rounded-2xl transition-all duration-300 hover:bg-white/60 cursor-pointer group"
         >
@@ -129,7 +133,7 @@ const SidebarContent = ({ isCollapsed = false }) => {
             </Avatar>
             <div className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full shadow-sm" />
           </div>
-          
+
           {!isCollapsed && (
             <Box className="flex-1 min-w-0">
               <Typography className="text-[14px] font-black text-slate-900 leading-tight truncate">Meet Nayak</Typography>
