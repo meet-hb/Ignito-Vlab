@@ -155,7 +155,7 @@ export default function Login() {
                 transition={{ delay: 0.4 }}
                 className="flex items-center gap-4"
               >
-                <Box className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/30 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                <Box className="w-14 h-14 rounded-[20px] bg-white border border-white/10 flex items-center justify-center shadow-[0_12px_24px_-8px_rgba(0,0,0,0.3)]">
                   <img src="/assets/logo-icon.png" alt="VL" className="w-9 h-9 object-contain" />
                 </Box>
                 <div>

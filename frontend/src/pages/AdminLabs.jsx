@@ -37,7 +37,7 @@ export default function AdminLabs({ onMenuClick }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLab, setEditingLab] = useState(null);
   
-  const [formData, setFormData] = useState({ title: '', logo: '', category: 'Infrastructure' });
+  const [formData, setFormData] = useState({ title: '', logo: '', category: 'Infrastructure', semester: 'Semester 1' });
 
   const filteredLabs = labs.filter(l => 
     l.title.toLowerCase().includes(search.toLowerCase())
@@ -46,10 +46,15 @@ export default function AdminLabs({ onMenuClick }) {
   const handleOpenModal = (lab) => {
     if (lab) {
       setEditingLab(lab);
-      setFormData({ title: lab.title, logo: lab.logo, category: lab.category || 'Infrastructure' });
+      setFormData({ 
+        title: lab.title, 
+        logo: lab.logo, 
+        category: lab.category || 'Infrastructure',
+        semester: lab.semester || 'Semester 1'
+      });
     } else {
       setEditingLab(null);
-      setFormData({ title: '', logo: '', category: 'Infrastructure' });
+      setFormData({ title: '', logo: '', category: 'Infrastructure', semester: 'Semester 1' });
     }
     setIsModalOpen(true);
   };
@@ -138,6 +143,7 @@ export default function AdminLabs({ onMenuClick }) {
                   <TableRow>
                     <TableCell sx={{ fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.25em', color: '#475569', py: 3, pl: 5, border: 'none' }}>Virtual Instance</TableCell>
                     <TableCell sx={{ fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.25em', color: '#475569', border: 'none' }}>Category</TableCell>
+                    <TableCell sx={{ fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.25em', color: '#475569', border: 'none' }}>Semester</TableCell>
                     <TableCell sx={{ fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.25em', color: '#475569', border: 'none' }}>Operational Status</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.25em', color: '#475569', py: 3, pr: 5, border: 'none' }}>Control Array</TableCell>
                   </TableRow>
@@ -170,6 +176,9 @@ export default function AdminLabs({ onMenuClick }) {
                           label={lab.category || 'Standard'} 
                           className="bg-red-50 border border-red-100 text-red-600 font-black text-[9px] tracking-widest uppercase px-1 h-6" 
                         />
+                      </TableCell>
+                      <TableCell sx={{ border: 'none' }}>
+                         <Typography className="text-[11px] font-black text-slate-900 tracking-widest uppercase">{lab.semester || 'Semester 1'}</Typography>
                       </TableCell>
                       <TableCell sx={{ border: 'none' }}>
                         <div className="flex items-center gap-2.5">
@@ -233,6 +242,22 @@ export default function AdminLabs({ onMenuClick }) {
             label="Brand Asset URL"
             value={formData.logo}
             onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+            sx={{ 
+              '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.5)', fontWeight: 'bold' },
+              '& .MuiOutlinedInput-root': { 
+                borderRadius: '16px', 
+                bgcolor: '#f8fafc',
+                color: '#1e293b',
+                '& fieldset': { borderColor: '#e2e8f0' }
+              }
+            }}
+          />
+          <TextField
+            fullWidth
+            label="Academic Semester"
+            value={formData.semester}
+            placeholder="e.g. Semester 1"
+            onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
             sx={{ 
               '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.5)', fontWeight: 'bold' },
               '& .MuiOutlinedInput-root': { 
